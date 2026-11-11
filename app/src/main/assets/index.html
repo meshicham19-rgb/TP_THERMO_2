@@ -1,0 +1,2078 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="Pr Hicham MESBAH">
+<style>html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>TP Thermo 2 Pr Mesbah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: paillasse de labo — scène 3D + rack d'instruments, puis cahier de relevés (tableaux, graphes, exploitation) */
+:root{
+  --bg:#eceff1; --panel:#ffffff; --ink:#17222a; --muted:#56656f; --line:#d2dade; --grid:#e3e8eb;
+  --copper:#b05f27; --on-copper:#ffffff; --copper-ink:#8b4617;
+  --cold:#2e6db0; --hot:#c43e2c; --ok:#2c7a4c; --warn:#a86a00; --scene:#dde3e7;
+  --f-disp:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10161a; --panel:#182027; --ink:#e2e8eb; --muted:#93a2ab; --line:#2a353d; --grid:#222d34;
+  --copper:#e08a4c; --on-copper:#1b1009; --copper-ink:#f0a46b;
+  --cold:#6ea8ea; --hot:#f07a66; --ok:#62c18a; --warn:#e3a740; --scene:#1a2329; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10161a; --panel:#182027; --ink:#e2e8eb; --muted:#93a2ab; --line:#2a353d; --grid:#222d34;
+  --copper:#e08a4c; --on-copper:#1b1009; --copper-ink:#f0a46b;
+  --cold:#6ea8ea; --hot:#f07a66; --ok:#62c18a; --warn:#e3a740; --scene:#1a2329; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 48px}
+.wrap{max-width:1280px;margin:0 auto;display:grid;gap:18px}
+header{display:grid;gap:12px}
+.byline{font:500 15px/1.3 var(--f-body);color:var(--muted);margin-top:6px}.byline strong{color:var(--ink);font-weight:600}
+.sig{display:grid;gap:8px;justify-items:start;min-width:0}
+.sig-box{display:inline-grid;gap:2px;max-width:100%}
+.signame{--dil:0em;--sigpos:0%;margin:6px 0 0;font:700 clamp(28px,5vw,50px)/1 var(--f-disp);letter-spacing:calc(.005em + var(--dil));white-space:nowrap;
+  background:linear-gradient(90deg,var(--cold) 0%,var(--cold) 22%,var(--copper) 50%,var(--hot) 78%,var(--hot) 100%);background-size:300% 100%;background-position:var(--sigpos) 0;
+  -webkit-background-clip:text;background-clip:text;color:transparent;transition:letter-spacing .5s linear,background-position .8s linear}
+.sig-pr{font-size:.42em;font-weight:600;letter-spacing:.12em;vertical-align:.95em;margin-right:.25em}
+.sig-ruler{position:relative;height:30px;border-top:2px solid var(--ink);
+  background:repeating-linear-gradient(90deg,var(--ink) 0 1.5px,transparent 1.5px 40px) top left/100% 12px no-repeat,repeating-linear-gradient(90deg,var(--muted) 0 1px,transparent 1px 8px) top left/100% 6px no-repeat;
+  font:500 11px var(--f-mono);color:var(--muted)}
+.sig-ruler::after{content:"";position:absolute;right:0;top:-10px;width:2px;height:22px;background:var(--copper)}
+.sig-ruler .l0{position:absolute;left:0;top:14px}.sig-ruler .dl{position:absolute;right:4px;top:14px;color:var(--copper-ink)}
+.sig-cap{font:500 13px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.subtabs{display:flex;gap:0;border-bottom:1.5px solid var(--line)}
+.sub{font:600 16px/1 var(--f-disp);letter-spacing:.04em;padding:10px 16px 11px;border:0;background:none;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.sub[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--copper)}
+.sub:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.view{display:grid;gap:14px}
+.cr{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:clamp(16px,3.2vw,36px);display:grid;gap:26px;min-width:0}
+.crhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font:500 13px/1.45 var(--f-body);color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:12px}
+.crtitle{font:700 clamp(24px,3.6vw,32px)/1.1 var(--f-disp);margin:0;text-wrap:balance}
+.crid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:10px}
+@media (max-width:640px){.crid{grid-template-columns:minmax(0,1fr)}}
+.crid label,.q label{display:grid;gap:4px;font:600 12px/1.2 var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.cr input[type=text],.cr input[type=date],.cr textarea{font:400 15px/1.5 var(--f-body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;text-transform:none;letter-spacing:0}
+.cr textarea{resize:vertical;min-height:84px;background-image:repeating-linear-gradient(transparent 0 calc(1.5em + 7px),var(--grid) calc(1.5em + 7px) calc(1.5em + 8px));background-attachment:local}
+.cr input:focus-visible,.cr textarea:focus-visible{outline:2px solid var(--copper);outline-offset:1px}
+.crtools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:space-between;background:var(--bg);border-radius:8px;padding:10px 12px}
+.crs{display:grid;gap:10px;min-width:0}
+.crh{font:700 21px/1.15 var(--f-disp);margin:0;color:var(--ink);text-transform:none;letter-spacing:.01em;border-bottom:1.5px solid var(--ink);padding-bottom:6px}
+.crs h4{font:600 15px/1.2 var(--f-disp);letter-spacing:.03em;margin:6px 0 0}
+.q{display:grid;gap:6px;min-width:0}
+.qlabel{font:500 15px/1.45 var(--f-body);color:var(--ink);max-width:80ch}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.corr{display:none;font:400 14.5px/1.55 var(--f-body);background:color-mix(in srgb,var(--ok) 9%,var(--panel));border:1px solid color-mix(in srgb,var(--ok) 35%,var(--line));border-radius:6px;padding:9px 12px;max-width:90ch}
+.corr::before{content:"Corrigé";display:block;font:600 11px/1 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--ok);margin-bottom:5px}
+.cr.showcorr .corr{display:block}
+.cr:not(.showcorr) .crtbl .calc{display:none}
+.cr .crtbl caption{caption-side:top;text-align:left;font:600 14px var(--f-disp);letter-spacing:.03em;padding:0 0 6px;color:var(--ink)}
+.tblhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.btn.small{flex:0 0 auto;font-size:13px;padding:7px 10px}
+.crcharts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:14px}
+.crcharts figure{margin:0;display:grid;gap:4px;min-width:0}.crcharts figcaption{font:600 13px var(--f-disp);letter-spacing:.04em;color:var(--muted)}
+.live{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--copper-ink)}
+.eyebrow{font:600 12px/1.2 var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--copper-ink)}
+h1{font:700 clamp(30px,5.4vw,46px)/1 var(--f-disp);margin:4px 0 0;letter-spacing:.005em;text-wrap:balance}
+h2{font:700 22px/1.1 var(--f-disp);margin:0;letter-spacing:.01em;text-wrap:balance}
+h3{font:600 13px/1.2 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+p{margin:0;max-width:70ch}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tab{font:600 16px/1 var(--f-disp);letter-spacing:.04em;padding:10px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tab.cr-tab{border-style:dashed;border-color:var(--copper);color:var(--copper-ink)}
+.tabsep{width:1px;background:var(--line);margin:4px 6px}
+.crphoto{margin:0;display:grid;gap:6px}.crphoto img{width:100%;max-width:760px;border-radius:8px;border:1px solid var(--line)}.crphoto figcaption{font-size:13px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tab:focus-visible,.seg button:focus-visible,.btn:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+.bench{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(290px,1fr);gap:14px;align-items:start}
+@media (max-width:900px){.bench{grid-template-columns:minmax(0,1fr)}}
+.stagebox{display:grid;gap:6px;min-width:0}
+.stage{position:relative;border-radius:10px;overflow:hidden;background:var(--scene);border:1px solid var(--line);aspect-ratio:16/10;min-height:310px;max-width:100%;touch-action:none}
+.stage canvas{display:block;width:100%;height:100%}
+.hud{position:absolute;left:8px;top:8px;right:8px;display:flex;flex-wrap:wrap;gap:5px;pointer-events:none;z-index:2}
+.chip{background:color-mix(in srgb,var(--panel) 90%,transparent);border:1px solid var(--line);border-radius:6px;padding:3px 7px;font:500 12px/1.3 var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.chip b{font:600 11px/1 var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-right:5px}
+.chip.state{font-family:var(--f-disp);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.chip.state.ok{color:var(--ok)} .chip.state.run{color:var(--copper-ink)} .chip.state.off{color:var(--muted)}
+.lbl{position:absolute;transform:translate(-50%,-100%);font:600 11px/1 var(--f-disp);letter-spacing:.06em;text-transform:uppercase;background:var(--ink);color:var(--bg);padding:3px 6px;border-radius:3px;white-space:nowrap;pointer-events:none;z-index:1;opacity:.92}
+.hint{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;color:var(--copper-ink);font:600 12px var(--f-body);cursor:pointer;padding:0;text-decoration:underline}
+.nogl{position:absolute;inset:0;display:grid;place-items:center;padding:20px;text-align:center;color:var(--muted)}
+.rack{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:14px;min-width:0}
+.field{display:grid;gap:6px}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{flex:1 1 auto;min-width:44px;font:600 14px/1 var(--f-disp);letter-spacing:.03em;padding:9px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;font-variant-numeric:tabular-nums}
+.seg button[aria-pressed="true"]{background:var(--copper);color:var(--on-copper);border-color:var(--copper)}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{font:600 15px/1 var(--f-disp);letter-spacing:.03em;padding:11px 14px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;flex:1 1 auto}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn.go{background:var(--copper);color:var(--on-copper);border-color:var(--copper)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:13px;color:var(--muted)}
+.note.warn{color:var(--warn)}
+.instr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ins{margin:0;border:1px solid var(--line);border-radius:8px;padding:8px 6px;display:grid;grid-template-rows:1fr auto;align-items:center;justify-items:center;gap:6px;background:var(--bg);min-width:0}
+.ins svg{width:100%;max-width:120px;height:auto;display:block}
+.ins figcaption{text-align:center;display:grid;gap:1px;font:500 12px var(--f-body);color:var(--muted)}
+.ins .big{font:600 22px/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+.ins .unit{font:500 13px var(--f-mono);color:var(--ink)}
+.lcd{width:100%;aspect-ratio:1/1.1;max-width:120px;border-radius:6px;background:#0d1a12;color:#55f08a;display:grid;place-content:center;text-align:center;font:600 13px var(--f-mono);gap:4px}
+.lcd .big{color:#55f08a}
+.explain{display:grid;gap:14px;border-top:1.5px solid var(--ink);padding-top:14px;min-width:0}
+.explain h3.ex-title{font:700 20px/1.15 var(--f-disp);text-transform:none;letter-spacing:.01em;color:var(--ink);margin:0}
+.explain .ex-intro{font-size:14.5px;max-width:85ch}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:12px;counter-reset:st}
+.steps>li{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 12px;counter-increment:st;align-items:start}
+.steps>li::before{content:counter(st);grid-row:1/span 3;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 15px var(--f-disp);background:var(--ink);color:var(--bg)}
+.steps>li.p0{counter-increment:none}.steps>li.p0::before{content:"0"}
+.steps h4{font:700 16px/1.25 var(--f-disp);margin:4px 0 0;letter-spacing:.02em}
+.steps p{font-size:14.5px;line-height:1.55;max-width:85ch}
+.steps .how{color:var(--muted)}.steps .how b{color:var(--ink)}
+.val{font:600 13.5px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--copper-ink);white-space:nowrap}
+.extbl{overflow-x:auto}.extbl table{font:14px/1.45 var(--f-body)}.extbl td:nth-child(3){font-family:var(--f-mono);font-size:13px}.extbl td,.extbl th{white-space:normal;text-align:left;vertical-align:top}
+.extbl td.num{text-align:right;white-space:nowrap}
+.sw{display:inline-block;width:14px;height:4px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:13px}
+.legend span:nth-child(odd){font:600 13px var(--f-mono);color:var(--copper-ink)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;min-width:0;align-content:start}
+.cardhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tbl{overflow-x:auto;max-width:100%}
+table{border-collapse:collapse;font:12.5px/1.35 var(--f-mono);font-variant-numeric:tabular-nums;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:right;white-space:nowrap}
+thead th{font:600 12px/1.2 var(--f-disp);letter-spacing:.05em;color:var(--muted);text-transform:none;border-bottom:1.5px solid var(--ink)}
+thead th:first-child{text-align:left}
+tbody th{text-align:left;font:500 13px var(--f-body);color:var(--ink)}
+td.na{color:var(--muted)} td.flag{color:var(--warn)}
+tr.cur td{background:color-mix(in srgb,var(--copper) 10%,transparent)}
+.calc.hidecalc{display:none}
+select{font:600 14px var(--f-disp);padding:7px 10px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+canvas.chart{width:100%;height:300px;display:block}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.kv div{border:1px solid var(--line);border-radius:7px;padding:8px 10px;display:grid;gap:2px}
+.kv b{font:600 11px/1.2 var(--f-disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.kv span{font:500 15px var(--f-mono);font-variant-numeric:tabular-nums}
+.tog{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer}
+.tog input{width:18px;height:18px;accent-color:var(--copper)}
+.toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:8px;font:500 14px var(--f-body);z-index:20;max-width:calc(100% - 32px)}
+footer{font-size:12px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="sig">
+    <div class="eyebrow">Travaux pratiques virtuels · Thermodynamique 2 · SMP3 · FS Agadir</div>
+    <div class="sig-box">
+      <h1 class="signame" id="sig"><span class="sig-pr">Pr</span>Hicham MESBAH</h1>
+      <div class="sig-ruler" aria-hidden="true"><span class="l0">L₀</span><span class="dl" id="sig-dl">L₀ + ΔL</span></div>
+    </div>
+    <div class="sig-cap" id="sig-cap">Ma signature se dilate avec le tube · ΔT = 0,0 °C</div>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-dil" data-tab="dil" data-sub="man" aria-selected="true">TP 2 · Dilatation thermique</button>
+    <button class="tab cr-tab" role="tab" data-tab="dil" data-sub="cr" aria-selected="false">Compte rendu TP 2</button>
+    <span class="tabsep" aria-hidden="true"></span>
+    <button class="tab" role="tab" id="tab-pac" data-tab="pac" data-sub="man" aria-selected="false">TP 1 · Pompe à chaleur</button>
+    <button class="tab cr-tab" role="tab" data-tab="pac" data-sub="cr" aria-selected="false">Compte rendu TP 1</button>
+  </div>
+</header>
+
+<!-- ================= TP DILATATION ================= -->
+<section id="sec-dil" class="wrap" style="gap:14px">
+  <div class="subtabs" role="tablist">
+    <button class="sub" role="tab" data-sec="dil" data-sub="man" aria-selected="true">Manipulation</button>
+    <button class="sub" role="tab" data-sec="dil" data-sub="cr" aria-selected="false">Compte rendu</button>
+  </div>
+  <div class="view" id="dil-man">
+  <div class="bench">
+    <div class="stagebox">
+      <div class="stage" id="stage-dil">
+        <div class="hud">
+          <span class="chip state" id="d-state">Arrêt</span>
+          <span class="chip"><b>Régulateur</b><span id="d-reg">21,0</span> °C</span>
+          <span class="chip"><b>Thermomètre</b><span id="d-tb">21,0</span> °C</span>
+          <span class="chip"><b>Prochain palier</b><span id="d-next">30</span> °C</span>
+          <span class="chip"><b>Comparateur</b><span id="d-dl">0,00</span> mm</span>
+        </div>
+      </div>
+      <div class="hint"><span>Glisser pour tourner · pincer ou molette pour zoomer</span><button class="linkbtn" id="d-lbl">Masquer les légendes</button></div>
+    </div>
+    <div class="rack">
+      <div class="field"><h3>Lectures en direct</h3>
+        <div class="instr">
+          <figure class="ins"><div class="lcd"><span>SET 80,0</span><span class="big" id="i-reg">21,0</span><span id="i-heat">OFF</span></div>
+            <figcaption><span><span class="big" id="i-regv">21,0</span> <span class="unit">°C</span></span>Régulateur</figcaption></figure>
+          <figure class="ins"><svg id="i-thermo" viewBox="0 0 88 230" role="img" aria-label="Thermomètre"></svg>
+            <figcaption><span><span class="big" id="i-th">21,0</span> <span class="unit">°C</span></span>Thermomètre</figcaption></figure>
+          <figure class="ins"><svg id="i-comp" viewBox="0 0 200 200" role="img" aria-label="Comparateur"></svg>
+            <figcaption><span><span class="big" id="i-cmp">0,00</span> <span class="unit">mm</span></span>Comparateur</figcaption></figure>
+        </div></div>
+      <div class="field"><h3>Tube étudié</h3>
+        <div class="seg" id="d-mat"><button data-v="acier">Acier</button><button data-v="cuivre">Cuivre</button><button data-v="aluminium">Aluminium</button></div></div>
+      <div class="field"><h3>Repère de fixation L₀</h3>
+        <div class="seg" id="d-L0"><button data-v="0.2">20 cm</button><button data-v="0.4">40 cm</button><button data-v="0.6">60 cm</button></div></div>
+      <div class="field"><h3>Chauffage continu · paliers de relevé</h3>
+        <div class="seg" id="d-pal" aria-label="Paliers"><button data-v="30" tabindex="-1">30</button><button data-v="40" tabindex="-1">40</button><button data-v="50" tabindex="-1">50</button><button data-v="60" tabindex="-1">60</button><button data-v="70" tabindex="-1">70</button><button data-v="80" tabindex="-1">80</button></div>
+        <p class="note">L'eau chauffe sans arrêt (≈ 1,5 °C/min). Quand le régulateur affiche un palier, on lit au même instant le comparateur et le thermomètre.</p>
+        <label class="tog"><input type="checkbox" id="d-pause" checked> Pause à chaque palier, le temps de lire</label></div>
+      <div class="field"><h3>Vitesse · amplification visuelle</h3>
+        <div class="seg" id="d-spd"><button data-v="1">×1</button><button data-v="10">×10</button><button data-v="60">×60</button></div>
+        <div class="seg" id="d-amp"><button data-v="1">Dilatation réelle</button><button data-v="60">Amplifiée ×60</button></div></div>
+      <div class="btns">
+        <button class="btn go" id="d-on">Mettre en marche</button>
+        <button class="btn primary" id="d-rec">Relever comparateur + thermomètre</button>
+      </div>
+      <div class="btns">
+        <button class="btn" id="d-cool">Vider · eau froide</button>
+        <button class="btn" id="d-auto">Série auto 30 → 80 °C</button>
+      </div>
+      <p class="note" id="d-msg">Tube fixé, comparateur à zéro. Mettez en marche : le bain chauffe de façon continue jusqu'à 80 °C.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead"><h2 id="d-tabtitle">Tableau — acier, L₀ = 40 cm</h2>
+      <div class="btns" style="flex:0 1 auto"><button class="btn" id="d-copy">Copier tous les relevés</button><button class="btn" id="d-clear">Effacer cette série</button></div></div>
+    <div class="tbl"><table id="d-table"></table></div>
+    <p class="note">ΔT = T(thermomètre) − T(initiale). dL lu au comparateur au 1/100 mm, au même instant que le thermomètre. En orange : relevé fait trop tard après le palier (plus de 0,8 °C de dépassement).</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="cardhead"><h2>dL/L₀ en fonction de ΔT</h2>
+        <select id="d-chartL0" aria-label="Longueur initiale tracée"><option value="0.2">L₀ = 20 cm</option><option value="0.4" selected>L₀ = 40 cm</option><option value="0.6">L₀ = 60 cm</option></select></div>
+      <canvas class="chart" id="d-chart"></canvas>
+    </div>
+    <div class="card">
+      <h2>Exploitation : coefficient α</h2>
+      <p class="note">Pente de la droite de régression dL/L₀ = α·ΔT, comparée au tableau 1 du polycopié.</p>
+      <div class="tbl"><table id="d-res"></table></div>
+      <p class="note">Si α ne dépend pas de L₀, les séries 40 cm et 60 cm d'un même matériau donnent la même pente.</p>
+    </div>
+  </div>
+  </div>
+  <div class="view" id="dil-cr" hidden>
+  <article class="cr" id="cr-dil">
+    <div class="crhead"><div>Université Ibn Zohr<br>Faculté des Sciences<br>Département de physique</div><div style="text-align:right">Année universitaire 2025-2026<br>Module : Thermodynamique 2<br>Filière : PC-Physique S3</div></div>
+    <h2 class="crtitle">TP 2 : Étude de la dilatation thermique d'une barre</h2>
+    <div class="crid">
+      <label for="crd-noms">Noms et prénoms<input type="text" id="crd-noms" placeholder="Nom 1, Nom 2…"></label>
+      <label for="crd-grp">Groupe<input type="text" id="crd-grp" placeholder="G…"></label>
+      <label for="crd-date">Date<input type="date" id="crd-date"></label></div>
+    <div class="crtools"><label class="tog"><input type="checkbox" id="crd-corr"> Afficher les corrigés et les calculs</label>
+      <button class="btn small" id="crd-copy">Copier le compte rendu</button></div>
+    <section class="crs"><h3 class="crh">1. But de la manipulation</h3>
+      <div class="q"><div class="qlabel"></div><textarea id="crd-but" rows="3" placeholder=""></textarea><div class="corr">Étudier l'allongement d'une barre métallique (acier, cuivre) chauffée par l'eau qui circule à l'intérieur, vérifier que dL/L₀ est proportionnel à ΔT, déterminer le coefficient de dilatation linéique α de chaque matériau et vérifier qu'il ne dépend pas de la longueur initiale L₀.</div></div></section>
+    <section class="crs"><h3 class="crh">2. Description du dispositif expérimental</h3>
+      <div class="q"><div class="qlabel"></div><textarea id="crd-disp" rows="5" placeholder=""></textarea><div class="corr">Un thermostat (cuve, résistance chauffante, régulateur et pompe) chauffe l'eau et la fait circuler dans le tube étudié par des tuyaux souples. Le tube est bloqué en un point fixe placé à la distance L₀ (20, 40 ou 60 cm) de l'extrémité libre. Celle-ci appuie sur la tige d'un comparateur gradué au 1/100 mm, qui mesure l'allongement dL. Un thermomètre plongé dans le bain donne la température T de l'eau. Le chauffage est continu : à chaque palier du régulateur (30, 40… 80 °C), on lit en même temps le comparateur et le thermomètre.</div></div></section>
+    <section class="crs"><h3 class="crh">3. Rappel théorique du coefficient de dilatation thermique linéique</h3>
+      <div class="q"><div class="qlabel"></div><textarea id="crd-rap" rows="3" placeholder=""></textarea><div class="corr">Pour une variation de température modérée, l'allongement est proportionnel à la longueur initiale et à l'élévation de température : dL = α·L₀·ΔT, soit L = L₀(1 + α·ΔT). Le coefficient α = (1/L₀)·(dL/dT) s'exprime en K⁻¹ (ou °C⁻¹). Pour les métaux il est de l'ordre de 10⁻⁵ K⁻¹ : acier ≈ 12×10⁻⁶ K⁻¹, cuivre ≈ 17×10⁻⁶ K⁻¹.</div></div></section>
+    <section class="crs"><h3 class="crh">4. Mesures</h3>
+      <p class="qlabel">Compléter les tableaux 1, 2, 3 et 4 en relevant la variation de la longueur dL en fonction de la température du bain d'eau T. Les valeurs lues sont reportées depuis la manipulation ; les lignes ΔT et dL/L₀ sont à calculer (elles apparaissent avec le corrigé).</p>
+      <div class="tbl"><div class="tblhead"><strong style="font:600 15px var(--f-disp)">Tableau 1, barre en acier et L₀ = 40 cm</strong>
+        <button class="btn small" data-goto="acier|0.4">Mesurer cette série</button></div><table class="crtbl" id="crd-t1"></table></div><div class="tbl"><div class="tblhead"><strong style="font:600 15px var(--f-disp)">Tableau 2, barre en acier et L₀ = 60 cm</strong>
+        <button class="btn small" data-goto="acier|0.6">Mesurer cette série</button></div><table class="crtbl" id="crd-t2"></table></div><div class="tbl"><div class="tblhead"><strong style="font:600 15px var(--f-disp)">Tableau 3, barre en cuivre et L₀ = 40 cm</strong>
+        <button class="btn small" data-goto="cuivre|0.4">Mesurer cette série</button></div><table class="crtbl" id="crd-t3"></table></div><div class="tbl"><div class="tblhead"><strong style="font:600 15px var(--f-disp)">Tableau 4, barre en cuivre et L₀ = 60 cm</strong>
+        <button class="btn small" data-goto="cuivre|0.6">Mesurer cette série</button></div><table class="crtbl" id="crd-t4"></table></div></section>
+    <section class="crs"><h3 class="crh">4. Tracé sur papier millimétré</h3>
+      <p class="qlabel">1. Tracez dL/L₀ en fonction de ΔT pour L₀ = 40 cm sur le même graphe (acier et cuivre). 2. Même chose pour L₀ = 60 cm.</p>
+      <div class="crcharts"><figure><figcaption>L₀ = 40 cm · acier et cuivre</figcaption><canvas class="chart" id="crd-c40"></canvas></figure>
+        <figure><figcaption>L₀ = 60 cm · acier et cuivre</figcaption><canvas class="chart" id="crd-c60"></canvas></figure></div></section>
+    <section class="crs"><h3 class="crh">5. Exploitation des mesures</h3>
+      <div class="q"><div class="qlabel">1. Ces courbes sont-elles des droites ?</div><textarea id="crd-q1" rows="2" placeholder=""></textarea><div class="corr"><span id="crd-k1">Relevez les séries pour obtenir le corrigé chiffré.</span></div></div>
+      <div class="q"><div class="qlabel">2. Si oui, en déduire les coefficients de dilatation linéaire α pour les deux matériaux utilisés.</div><textarea id="crd-q2" rows="3" placeholder=""></textarea><div class="corr"><span id="crd-k2"></span></div></div>
+      <div class="q"><div class="qlabel">3. Ces coefficients dépendent-ils de la longueur initiale L₀ ?</div><textarea id="crd-q3" rows="3" placeholder=""></textarea><div class="corr"><span id="crd-k3"></span></div></div>
+      <div class="q"><div class="qlabel">4. Conclure.</div><textarea id="crd-q4" rows="5" placeholder=""></textarea><div class="corr">La variation relative de longueur dL/L₀ est proportionnelle à ΔT : la loi L = L₀(1 + αΔT) est vérifiée. α est une caractéristique du matériau, indépendante de L₀, et α(cuivre) &gt; α(acier) : à échauffement égal, le cuivre s’allonge davantage. Sources d’erreur : la température du tube suit celle de l’eau avec un léger retard pendant la chauffe continue, l’écart régulateur/thermomètre, la lecture du comparateur (± 0,01 mm) et du thermomètre (± 0,5 °C). Applications : joints de dilatation des ponts et rails, bilames, tolérances d’usinage.</div></div></section>
+  </article>
+  </div>
+</section>
+
+<!-- ================= TP POMPE A CHALEUR ================= -->
+<section id="sec-pac" class="wrap" style="gap:14px" hidden>
+  <div class="subtabs" role="tablist">
+    <button class="sub" role="tab" data-sec="pac" data-sub="man" aria-selected="true">Manipulation</button>
+    <button class="sub" role="tab" data-sec="pac" data-sub="cr" aria-selected="false">Compte rendu</button>
+  </div>
+  <div class="view" id="pac-man">
+  <div class="bench">
+    <div class="stagebox">
+      <div class="stage" id="stage-pac">
+        <div class="hud">
+          <span class="chip state" id="p-state">Compresseur débranché</span>
+          <span class="chip"><b>t</b><span id="p-t">00:00</span></span>
+          <span class="chip" style="color:var(--cold)"><b>T<sub>L</sub></b><span id="p-tl">20,0</span> °C</span>
+          <span class="chip" style="color:var(--hot)"><b>T<sub>H</sub></b><span id="p-th">20,0</span> °C</span>
+          <span class="chip"><b>BP</b><span id="p-pl">4,7</span> bar</span>
+          <span class="chip"><b>HP</b><span id="p-ph">4,7</span> bar</span>
+        </div>
+      </div>
+      <div class="hint"><span>Pressions relatives (lecture des manomètres)</span><button class="linkbtn" id="p-lbl">Masquer les légendes</button></div>
+    </div>
+    <div class="rack">
+      <div class="field"><h3>Conditions initiales</h3>
+        <p class="note">m = 4 kg d'eau par seau · c = 4185 J·K⁻¹·kg⁻¹ · P = 130 W · R134a</p>
+        <div class="seg" id="p-T0"><button data-v="15">Eau à 15 °C</button><button data-v="20">20 °C</button><button data-v="25">25 °C</button></div></div>
+      <div class="field"><h3>Vitesse</h3>
+        <div class="seg" id="p-spd"><button data-v="1">×1</button><button data-v="10">×10</button><button data-v="30">×30</button><button data-v="90">×90</button></div></div>
+      <label class="tog"><input type="checkbox" id="p-agit" checked> Agitation des seaux</label>
+      <div class="btns">
+        <button class="btn go" id="p-go">Brancher le compresseur (t = 0)</button>
+        <button class="btn" id="p-reset">Réinitialiser</button>
+      </div>
+      <div class="btns">
+        <button class="btn primary" id="p-gocyc">Voir le cycle idéal (P, h)</button>
+      </div>
+      <div class="legend" id="p-legend">
+        <span>1</span><span>Compresseur 130 W</span><span>2</span><span>Seau rouge, eau chaude 4 L</span>
+        <span>3</span><span>Condenseur</span><span>4</span><span>Filtre</span>
+        <span>5</span><span>Détendeur thermostatique</span><span>6</span><span>Évaporateur</span>
+        <span>7</span><span>Seau bleu, eau froide 4 L</span><span>8</span><span>Manostat</span>
+        <span>9</span><span>Manomètre BP (−1 à 10 bar)</span><span>10</span><span>Manomètre HP (−1 à 30 bar)</span>
+      </div>
+      <p class="note" id="p-msg">Relevé automatique toutes les 2 min. À t = 30 min, P₁ et P₂ sont lues et le compresseur s'arrête.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="cardhead"><h2>Tableau de mesures</h2>
+      <div class="btns" style="flex:0 1 auto;align-items:center">
+        <label class="tog"><input type="checkbox" id="p-hide"> Mode étudiant (masquer les calculs)</label>
+        <button class="btn" id="p-copy">Copier le tableau</button></div></div>
+    <div class="tbl"><table id="p-table"></table></div>
+    <p class="note">Convention du fluide : Q<sub>H</sub> = −m·c·[T<sub>H</sub>(t₂) − T<sub>H</sub>(t₁)] &lt; 0, Q<sub>L</sub> = −m·c·[T<sub>L</sub>(t₂) − T<sub>L</sub>(t₁)] &gt; 0, W = P·Δt = 15 600 J. COP = −Q<sub>H</sub>/W, e = Q<sub>L</sub>/W, Carnot avec les températures de l'eau en K.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="cardhead"><h2 id="p-chtitle">Températures des réservoirs</h2>
+        <select id="p-chsel" aria-label="Courbe tracée"><option value="T">T<sub>H</sub>(t) et T<sub>L</sub>(t)</option><option value="e">e(t) et e Carnot</option><option value="cop">COP(t) et COP Carnot</option></select></div>
+      <canvas class="chart" id="p-chart"></canvas>
+      <p class="note" id="p-chnote"></p>
+    </div>
+    <div class="card" id="p-cyccard" style="grid-column:1/-1">
+      <div class="cardhead"><h2>Cycle idéal (P, h)</h2><span class="note" id="p-cyctag">instant actuel</span></div>
+      <canvas class="chart" id="p-ph" style="height:min(560px,120vw)"></canvas>
+      <p class="note">Diagramme du R134a (référence h = 200 kJ/kg à 0 °C). P absolue = P lue + 1 bar. Survolez ou touchez le diagramme pour lire h, P, T, x et s. Propriétés tabulées et approchées.</p>
+      <div class="explain" id="p-explain"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Efficacités déduites du cycle idéal</h2>
+    <div class="kv" id="p-kv"></div>
+  </div>
+  </div>
+  <div class="view" id="pac-cr" hidden>
+  <article class="cr" id="cr-pac">
+    <div class="crhead"><div>Université Ibn Zohr<br>Faculté des Sciences<br>Département de physique</div><div style="text-align:right">Année universitaire 2025-2026<br>Module : Thermodynamique 2<br>Filière : PC-Physique S3</div></div>
+    <h2 class="crtitle">TP 1 : Pompe à chaleur</h2>
+    <div class="crid">
+      <label for="crp-noms">Noms et prénoms<input type="text" id="crp-noms" placeholder="Nom 1, Nom 2…"></label>
+      <label for="crp-grp">Groupe<input type="text" id="crp-grp" placeholder="G…"></label>
+      <label for="crp-date">Date<input type="date" id="crp-date"></label></div>
+    <div class="crtools"><label class="tog"><input type="checkbox" id="crp-corr"> Afficher les corrigés et les calculs</label>
+      <button class="btn small" id="crp-copy">Copier le compte rendu</button></div>
+    <section class="crs"><h3 class="crh">1. But de la manipulation</h3>
+      <div class="q"><div class="qlabel"></div><textarea id="crp-but" rows="3" placeholder=""></textarea><div class="corr">Étudier une pompe à chaleur à compression de vapeur (R134a) qui fonctionne entre deux seaux d'eau de 4 kg : suivre T<sub>H</sub>(t) et T<sub>L</sub>(t), calculer les chaleurs échangées et le travail reçu, en déduire le COP de la pompe à chaleur et l'efficacité e du réfrigérateur, puis les comparer aux valeurs de Carnot et à celles du cycle idéal tracé dans le diagramme (P, h).</div></div></section>
+    <section class="crs"><h3 class="crh">2. Principe de la pompe à chaleur</h3>
+      <div class="q"><div class="qlabel"></div><textarea id="crp-pri" rows="6" placeholder=""></textarea><div class="corr">Le fluide frigorigène décrit un cycle fermé. Dans l'évaporateur (basse pression P<sub>L</sub>), il s'évapore en prélevant la chaleur Q<sub>L</sub> &gt; 0 à la source froide (seau bleu). Le compresseur reçoit le travail électrique W &gt; 0 et porte la vapeur à la haute pression P<sub>H</sub>. Dans le condenseur, la vapeur se condense en cédant Q<sub>H</sub> &lt; 0 à la source chaude (seau rouge). Le détendeur ramène le liquide à P<sub>L</sub> (détente isenthalpique). Sur un cycle, le premier principe donne W + Q<sub>H</sub> + Q<sub>L</sub> = 0, donc |Q<sub>H</sub>| = W + Q<sub>L</sub> &gt; W : on récupère plus de chaleur que l'énergie électrique consommée.</div></div></section>
+    <section class="crs"><h3 class="crh">a. Mesures</h3>
+      <div class="tblhead"><p class="qlabel">Relevé toutes les deux minutes (Δt = 2 min) des températures T<sub>H</sub> et T<sub>L</sub> et des pressions. Les colonnes calculées apparaissent avec le corrigé.</p><button class="btn small" data-gotop="1">Aller à la manipulation</button></div>
+      <div class="tbl"><table class="crtbl" id="crp-table"></table></div>
+      <div class="qgrid"><div class="q"><div class="qlabel">À t = 30 min : P₁ =</div><input type="text" id="crp-p1" placeholder="bar"><div class="corr"><span id="crp-kp1">Terminez la manipulation (t = 30 min).</span></div></div>
+        <div class="q"><div class="qlabel">P₂ =</div><input type="text" id="crp-p2" placeholder="bar"><div class="corr"><span id="crp-kp2">—</span></div></div></div></section>
+    <section class="crs"><h3 class="crh">b. Calculs à effectuer</h3>
+      <p class="qlabel">c = 4185 J·K⁻¹·kg⁻¹ ; P = 130 W.</p>
+      <div class="qgrid">
+      <div class="q"><div class="qlabel">Masse d'eau m<sub>eau</sub> =</div><input type="text" id="crp-m" placeholder="kg"><div class="corr">m = 4 kg (4 L d'eau dans chaque seau).</div></div>
+      <div class="q"><div class="qlabel">1. Chaleur Q<sub>H</sub> échangée entre t₁ et t₂ = t₁ + Δt :</div><input type="text" id="crp-qh" placeholder="QH = …"><div class="corr">Q<sub>H</sub> = m·c·[T<sub>H</sub>(t₁) − T<sub>H</sub>(t₂)] &lt; 0 (le fluide cède de la chaleur à la source chaude).</div></div>
+      <div class="q"><div class="qlabel">2. Chaleur Q<sub>L</sub> échangée entre t₁ et t₂ :</div><input type="text" id="crp-ql" placeholder="QL = …"><div class="corr">Q<sub>L</sub> = m·c·[T<sub>L</sub>(t₁) − T<sub>L</sub>(t₂)] &gt; 0 (le fluide reçoit de la chaleur de la source froide). Remarque : la feuille écrit T<sub>H</sub> par erreur, il s'agit bien de T<sub>L</sub>.</div></div>
+      <div class="q"><div class="qlabel">3. Travail électrique W reçu par le fluide entre t₁ et t₂ :</div><input type="text" id="crp-w" placeholder="W = …"><div class="corr">W = P·Δt = 130 × 120 = 15 600 J.</div></div>
+      <div class="q"><div class="qlabel">4. COP(t) et COP<sub>Carnot</sub>(t) :</div><input type="text" id="crp-cop" placeholder="COP = … ; COPcarnot = …"><div class="corr">COP(t) = −Q<sub>H</sub>/W ; COP<sub>Carnot</sub>(t) = T<sub>H</sub>/(T<sub>H</sub> − T<sub>L</sub>), températures en kelvins.</div></div>
+      <div class="q"><div class="qlabel">5. e(t) et e<sub>Carnot</sub>(t) du réfrigérateur :</div><input type="text" id="crp-e" placeholder="e = … ; ecarnot = …"><div class="corr">e(t) = Q<sub>L</sub>/W ; e<sub>Carnot</sub>(t) = T<sub>L</sub>/(T<sub>H</sub> − T<sub>L</sub>), en kelvins. On vérifie COP ≈ 1 + e (aux pertes près).</div></div>
+      </div>
+      <h4>Tracés sur papier millimétré</h4>
+      <div class="crcharts"><figure><figcaption>1. T<sub>H</sub>(t) et T<sub>L</sub>(t)</figcaption><canvas class="chart" id="crp-cT"></canvas></figure>
+        <figure><figcaption>2. e(t) et e<sub>Carnot</sub>(t)</figcaption><canvas class="chart" id="crp-ce"></canvas></figure>
+        <figure><figcaption>3. COP(t) et COP<sub>Carnot</sub>(t)</figcaption><canvas class="chart" id="crp-cc"></canvas></figure></div>
+      <div class="q"><div class="qlabel">4. Conclure.</div><textarea id="crp-conc1" rows="4" placeholder=""></textarea><div class="corr"><span id="crp-k1"></span></div></div></section>
+    <section class="crs"><h3 class="crh">c. Tracé du cycle idéal (diagramme P, h)</h3>
+      <p class="qlabel">1. Tracer le cycle idéal du fluide à t = 30 min à partir de P₁ et P₂. 2. Placer w', q'<sub>H</sub> et q'<sub>L</sub> sur les évolutions correspondantes.</p>
+      <p class="note">Saisissez P₁ et P₂ (section a) : votre cycle se trace sur le diagramme du R134a. Survolez ou touchez le diagramme pour lire h, P, T, x et s.</p>
+      <canvas class="chart" id="crp-ph" style="height:min(580px,120vw)"></canvas>
+      <div class="corr"><div class="explain" id="crp-explain"></div></div>
+      <div class="corr">1→2 : compression isentropique (s = cte) de la vapeur saturée de P₁ à P₂, reçoit w'. 2→3 : désurchauffe puis condensation isobare à P₂, cède q'<sub>H</sub>. 3→4 : détente isenthalpique (h₃ = h₄). 4→1 : évaporation isobare à P₁, reçoit q'<sub>L</sub>. Les pressions lues sont relatives : P absolue = P lue + 1 bar. Lecture sur le diagramme : h₁ sur la courbe de vapeur saturée à P₁, h₂ sur l’isentrope passant par 1 à P₂, h₃ sur la courbe de liquide saturé à P₂, puis h₄ = h₃.</div>
+      <div class="q"><div class="qlabel">3. Titre du mélange x (fraction de vapeur) à la sortie du détendeur :</div><input type="text" id="crp-x" placeholder="x vapeur = …"><div class="corr"><span id="crp-kx"></span></div></div></section>
+    <section class="crs"><h3 class="crh">d. Efficacités déduites du cycle idéal</h3>
+      <div class="qgrid">
+      <div class="q"><div class="qlabel">1. w' (expression et valeur) :</div><input type="text" id="crp-dw" placeholder="w' = …"><div class="corr">w’ = h₂ − h₁ <span class="live" id="crp-kw"></span></div></div>
+      <div class="q"><div class="qlabel">2. q'<sub>H</sub> (expression et valeur) :</div><input type="text" id="crp-dqh" placeholder="q'H = …"><div class="corr">q’<sub>H</sub> = h₃ − h₂ <span class="live" id="crp-kqh"></span></div></div>
+      <div class="q"><div class="qlabel">3. q'<sub>L</sub> (expression et valeur) :</div><input type="text" id="crp-dql" placeholder="q'L = …"><div class="corr">q’<sub>L</sub> = h₁ − h₄ <span class="live" id="crp-kql"></span></div></div>
+      <div class="q"><div class="qlabel">4. e<sub>idéal</sub> et cop<sub>idéal</sub> :</div><input type="text" id="crp-did" placeholder="eidéal = … ; copidéal = …"><div class="corr">e<sub>idéal</sub> = q’<sub>L</sub>/w’ ; cop<sub>idéal</sub> = −q’<sub>H</sub>/w’ <span class="live" id="crp-kid"></span></div></div>
+      <div class="q"><div class="qlabel">5. Débit massique moyen du réfrigérant (source chaude) :</div><input type="text" id="crp-deb" placeholder="ṁ = …"><div class="corr">ṁ = m·c·[T<sub>H</sub>(30) − T<sub>H</sub>(0)] / [Δt<sub>tot</sub>·(h₂ − h₃)] <span class="live" id="crp-kdeb"></span></div></div>
+      </div></section>
+    <section class="crs"><h3 class="crh">e. Conclusion globale</h3>
+      <div class="q"><div class="qlabel"></div><textarea id="crp-concg" rows="6" placeholder=""></textarea><div class="corr"><span id="crp-kg"></span></div></div></section>
+  </article>
+  </div>
+</section>
+
+<footer>Conception et simulation : Pr Hicham MESBAH. D'après le polycopié TP Thermodynamique 2 (Pr F. Z. Chrifi Alaoui, FS Agadir, 2025-2026). Modèles simplifiés : les valeurs sont simulées avec un bruit de mesure réaliste, pas des mesures réelles.</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<!-- three.js : copie locale (dossier js/) si présente, sinon chargement depuis Internet -->
+<script src="js/three.min.js"></script>
+<script>if(!window.THREE)document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
+<script src="js/OrbitControls.js"></script>
+<script>if(!window.THREE||!THREE.OrbitControls)document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');</script>
+<script>"use strict";
+(function () {
+    const $ = s => document.querySelector(s);
+    const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    const fmt = (v, d = 2) => (v == null || !isFinite(v)) ? '—' : v.toFixed(d).replace('.', ',').replace(/^-/, '−');
+    const fmtN = (v, d = 2) => (v == null || !isFinite(v)) ? '' : v.toFixed(d).replace('.', ',');
+    const r1 = v => Math.round(v * 10) / 10, r2 = v => Math.round(v * 100) / 100;
+    const gauss = () => { let u = 0, v = 0; while (!u)
+        u = Math.random(); while (!v)
+        v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+    let toastT;
+    function toast(m) { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+    function seg(id, val, cb) { const el = $(id); const set = v => el.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v == String(v)))); set(val); el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b)
+        return; cb(b.dataset.v); }); return set; }
+    const store = { get(k) { try {
+            return localStorage.getItem(k);
+        }
+        catch (e) {
+            return null;
+        } }, set(k, v) { try {
+            localStorage.setItem(k, v);
+        }
+        catch (e) { } } };
+    /* ======================= Graph helpers ======================= */
+    function niceStep(range, n) { const raw = range / n; const p = Math.pow(10, Math.floor(Math.log10(raw))); const f = raw / p; return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * p; }
+    function decs(step) { return Math.max(0, -Math.floor(Math.log10(step) + 1e-9)); }
+    function prep(cv) { const dpr = Math.min(window.devicePixelRatio || 1, 2), W = cv.clientWidth, H = cv.clientHeight; if (!W || !H)
+        return null; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H); return { g, W, H }; }
+    function chart(cv, o) {
+        var _a, _b, _c, _d;
+        const P = prep(cv);
+        if (!P)
+            return;
+        const { g, W, H } = P;
+        const ink = cssv('--ink'), muted = cssv('--muted'), grid = cssv('--grid'), body = cssv('--f-body'), mono = cssv('--f-mono');
+        const pad = { l: 56, r: 14, t: 34, b: 44 };
+        const xs = [], ys = [];
+        o.series.forEach(s => s.pts.forEach(p => { var _a; if (isFinite(p[1])) {
+            xs.push(p[0]);
+            ys.push(Math.min(p[1], (_a = o.yClip) !== null && _a !== void 0 ? _a : Infinity));
+        } }));
+        if (!xs.length) {
+            g.fillStyle = muted;
+            g.font = '14px ' + body;
+            g.textAlign = 'center';
+            g.fillText(o.empty || 'Aucune mesure pour l\'instant', W / 2, H / 2);
+            return;
+        }
+        let x0 = (_a = o.xMin) !== null && _a !== void 0 ? _a : Math.min(...xs), x1 = (_b = o.xMax) !== null && _b !== void 0 ? _b : Math.max(...xs), y0 = (_c = o.yMin) !== null && _c !== void 0 ? _c : Math.min(0, ...ys), y1 = (_d = o.yMax) !== null && _d !== void 0 ? _d : Math.max(...ys);
+        if (x1 <= x0)
+            x1 = x0 + 1;
+        if (y1 <= y0)
+            y1 = y0 + 1;
+        const sx = niceStep(x1 - x0, 6), sy = niceStep(y1 - y0, 5);
+        x0 = Math.floor(x0 / sx + 1e-9) * sx;
+        x1 = Math.ceil(x1 / sx - 1e-9) * sx;
+        y0 = Math.floor(y0 / sy + 1e-9) * sy;
+        y1 = Math.ceil(y1 / sy - 1e-9) * sy;
+        const X = v => pad.l + (v - x0) / (x1 - x0) * (W - pad.l - pad.r), Y = v => H - pad.b - (v - y0) / (y1 - y0) * (H - pad.t - pad.b);
+        g.font = '11px ' + mono;
+        g.lineWidth = 1;
+        const dx = decs(sx), dy = decs(sy);
+        for (let v = x0; v <= x1 + 1e-9; v += sx) {
+            g.strokeStyle = grid;
+            g.beginPath();
+            g.moveTo(X(v), pad.t);
+            g.lineTo(X(v), H - pad.b);
+            g.stroke();
+            g.fillStyle = muted;
+            g.textAlign = 'center';
+            g.fillText(fmtN(v, dx), X(v), H - pad.b + 15);
+        }
+        for (let v = y0; v <= y1 + 1e-9; v += sy) {
+            g.strokeStyle = grid;
+            g.beginPath();
+            g.moveTo(pad.l, Y(v));
+            g.lineTo(W - pad.r, Y(v));
+            g.stroke();
+            g.fillStyle = muted;
+            g.textAlign = 'right';
+            g.fillText(fmtN(v, dy), pad.l - 6, Y(v) + 4);
+        }
+        g.strokeStyle = ink;
+        g.beginPath();
+        g.moveTo(pad.l, pad.t);
+        g.lineTo(pad.l, H - pad.b);
+        g.lineTo(W - pad.r, H - pad.b);
+        g.stroke();
+        g.fillStyle = muted;
+        g.font = '12px ' + body;
+        g.textAlign = 'center';
+        g.fillText(o.xLabel, (pad.l + W - pad.r) / 2, H - 8);
+        g.save();
+        g.translate(13, (pad.t + H - pad.b) / 2);
+        g.rotate(-Math.PI / 2);
+        g.fillText(o.yLabel, 0, 0);
+        g.restore();
+        g.save();
+        g.beginPath();
+        g.rect(pad.l, pad.t, W - pad.l - pad.r, H - pad.t - pad.b);
+        g.clip();
+        o.series.forEach(s => {
+            const pts = s.pts.filter(p => isFinite(p[1]));
+            g.strokeStyle = s.color;
+            g.fillStyle = s.color;
+            g.lineWidth = 2;
+            g.setLineDash(s.dash ? [6, 4] : []);
+            if (s.fit && pts.length >= 2) {
+                const f = linfit(pts);
+                const a = x0, b = x1;
+                g.beginPath();
+                g.moveTo(X(a), Y(f.a * a + f.b));
+                g.lineTo(X(b), Y(f.a * b + f.b));
+                g.stroke();
+            }
+            else if (s.line !== false && pts.length > 1) {
+                g.beginPath();
+                pts.forEach((p, i) => i ? g.lineTo(X(p[0]), Y(p[1])) : g.moveTo(X(p[0]), Y(p[1])));
+                g.stroke();
+            }
+            g.setLineDash([]);
+            pts.forEach(p => { g.beginPath(); if (s.square)
+                g.rect(X(p[0]) - 3.5, Y(p[1]) - 3.5, 7, 7);
+            else
+                g.arc(X(p[0]), Y(p[1]), 3.6, 0, 7); g.fill(); });
+        });
+        g.restore();
+        let lx = pad.l;
+        g.font = '600 12px ' + body;
+        g.textAlign = 'left';
+        o.series.forEach(s => { const w = g.measureText(s.name).width; if (lx + w + 26 > W) {
+            return;
+        } g.strokeStyle = s.color; g.lineWidth = 2; g.setLineDash(s.dash ? [5, 3] : []); g.beginPath(); g.moveTo(lx, 14); g.lineTo(lx + 16, 14); g.stroke(); g.setLineDash([]); g.fillStyle = ink; g.fillText(s.name, lx + 20, 18); lx += w + 34; });
+    }
+    function linfit(pts) { const n = pts.length; let sx = 0, sy = 0, sxx = 0, sxy = 0, syy = 0; pts.forEach(([x, y]) => { sx += x; sy += y; sxx += x * x; sxy += x * y; syy += y * y; }); const d = n * sxx - sx * sx; const a = d ? (n * sxy - sx * sy) / d : 0; const b = (sy - a * sx) / n; const r = Math.sqrt(Math.max(0, (n * sxx - sx * sx) * (n * syy - sy * sy))); return { a, b, r2: r ? Math.pow((n * sxy - sx * sy) / r, 2) : 1 }; }
+    /* ======================= 3D helpers ======================= */
+    let GL = typeof THREE !== 'undefined' && THREE.OrbitControls;
+    if (GL) {
+        try {
+            const c = document.createElement('canvas');
+            GL = !!(c.getContext('webgl') || c.getContext('experimental-webgl'));
+        }
+        catch (e) {
+            GL = false;
+        }
+    }
+    const M3 = (color, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: .55, metalness: 0 }, o));
+    function makeStage(el, camPos, target) {
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        el.prepend(renderer.domElement);
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(cssv('--scene'));
+        const camera = new THREE.PerspectiveCamera(38, 1.6, 0.1, 200);
+        camera.position.set(...camPos);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.target.set(...target);
+        controls.enableDamping = true;
+        controls.maxPolarAngle = Math.PI * .495;
+        controls.minDistance = 3;
+        controls.maxDistance = 28;
+        controls.update();
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x6f7d88, .85));
+        const dl = new THREE.DirectionalLight(0xffffff, .75);
+        dl.position.set(5, 11, 8);
+        scene.add(dl);
+        const dl2 = new THREE.DirectionalLight(0xffffff, .25);
+        dl2.position.set(-6, 4, -5);
+        scene.add(dl2);
+        const labels = [];
+        let show = true;
+        function resize() { const w = el.clientWidth, h = el.clientHeight; if (!w || !h)
+            return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+        new ResizeObserver(resize).observe(el);
+        resize();
+        function label(text, pos) { const o = new THREE.Object3D(); o.position.set(...pos); scene.add(o); const d = document.createElement('div'); d.className = 'lbl'; d.textContent = text; el.appendChild(d); labels.push({ d, o }); return { o, d }; }
+        const v = new THREE.Vector3();
+        function render() {
+            controls.update();
+            renderer.render(scene, camera);
+            const w = el.clientWidth, h = el.clientHeight;
+            labels.forEach(L => { if (!show) {
+                L.d.hidden = true;
+                return;
+            } L.o.getWorldPosition(v); v.project(camera); const vis = v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05; L.d.hidden = !vis; if (vis) {
+                L.d.style.left = ((v.x + 1) / 2 * w).toFixed(1) + 'px';
+                L.d.style.top = ((1 - v.y) / 2 * h).toFixed(1) + 'px';
+            } });
+        }
+        return { scene, camera, render, label, resize, setLabels(b) { show = b; }, renderer };
+    }
+    function polyPath(pts) { const p = new THREE.CurvePath(); for (let i = 1; i < pts.length; i++) {
+        if (pts[i].distanceTo(pts[i - 1]) > 1e-6)
+            p.add(new THREE.LineCurve3(pts[i - 1].clone(), pts[i].clone()));
+    } return p; }
+    function helix(cx, cz, r, yTop, yBot, turns, n) { const a = []; for (let i = 0; i <= n; i++) {
+        const u = i / n, t = u * turns * 2 * Math.PI;
+        a.push(new THREE.Vector3(cx + r * Math.cos(t), yTop - (yTop - yBot) * u, cz + r * Math.sin(t)));
+    } return a; }
+    function canvasTex(w, h, draw) { const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'), w, h); const t = new THREE.CanvasTexture(c); t.anisotropy = 4; return { t, c }; }
+    function dialFace(kind) {
+        return canvasTex(512, 512, (g) => {
+            g.translate(256, 256);
+            const R = 250;
+            g.fillStyle = kind === 'bp' ? '#2d64a8' : kind === 'hp' ? '#b8382a' : '#2b2f33';
+            g.beginPath();
+            g.arc(0, 0, R, 0, 7);
+            g.fill();
+            g.fillStyle = '#fbfbf6';
+            g.beginPath();
+            g.arc(0, 0, R - 22, 0, 7);
+            g.fill();
+            g.strokeStyle = '#1d2226';
+            g.fillStyle = '#1d2226';
+            g.textAlign = 'center';
+            g.textBaseline = 'middle';
+            if (kind === 'cmp') {
+                for (let i = 0; i < 100; i++) {
+                    const a = i / 100 * 2 * Math.PI - Math.PI / 2, L = i % 10 === 0 ? 36 : i % 5 === 0 ? 24 : 14;
+                    g.lineWidth = i % 10 === 0 ? 4 : 2;
+                    g.beginPath();
+                    g.moveTo(Math.cos(a) * (R - 28), Math.sin(a) * (R - 28));
+                    g.lineTo(Math.cos(a) * (R - 28 - L), Math.sin(a) * (R - 28 - L));
+                    g.stroke();
+                }
+                g.font = '600 38px "Barlow Condensed",sans-serif';
+                for (let i = 0; i < 10; i++) {
+                    const a = i / 10 * 2 * Math.PI - Math.PI / 2;
+                    g.fillText(String(i * 10), Math.cos(a) * (R - 92), Math.sin(a) * (R - 92));
+                }
+                g.font = '500 28px Barlow,sans-serif';
+                g.fillText('0,01 mm', 0, 72);
+                return;
+            }
+            const max = kind === 'bp' ? 10 : 30, min = -1, maj = kind === 'bp' ? 1 : 5, minr = kind === 'bp' ? .5 : 1;
+            for (let v = min; v <= max + 1e-6; v += minr) {
+                const a = (-135 + 270 * (v - min) / (max - min) - 90) * Math.PI / 180;
+                const major = Math.abs(v / maj - Math.round(v / maj)) < 1e-6 || v === min;
+                const L = major ? 32 : 16;
+                g.lineWidth = major ? 4 : 2;
+                g.beginPath();
+                g.moveTo(Math.cos(a) * (R - 28), Math.sin(a) * (R - 28));
+                g.lineTo(Math.cos(a) * (R - 28 - L), Math.sin(a) * (R - 28 - L));
+                g.stroke();
+                if (major) {
+                    g.font = '600 34px "Barlow Condensed",sans-serif';
+                    g.fillText(String(Math.round(v)), Math.cos(a) * (R - 88), Math.sin(a) * (R - 88));
+                }
+            }
+            g.font = '600 40px "Barlow Condensed",sans-serif';
+            g.fillText('bar', 0, 90);
+            g.font = '500 26px Barlow,sans-serif';
+            g.fillText(kind === 'bp' ? 'BP · R134a' : 'HP · R134a', 0, 135);
+        });
+    }
+    function needle(len, color) { const grp = new THREE.Group(); const m = new THREE.Mesh(new THREE.BoxGeometry(.035, len, .02), M3(color)); m.position.y = len / 2 - .06; grp.add(m); const cap = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .05, 16), M3(0x222222)); cap.rotation.x = Math.PI / 2; grp.add(cap); return grp; }
+    const lerpC = (a, b, t) => new THREE.Color(a).lerp(new THREE.Color(b), Math.max(0, Math.min(1, t)));
+    function waterColor(T) { return T < 20 ? lerpC(0x4f8fe8, 0x8fbcd6, (T) / 20) : lerpC(0x8fbcd6, 0xe2553c, (T - 20) / 40); }
+    /* ======================= TP 1 : DILATATION ======================= */
+    const MAT = { acier: { name: 'Acier', alpha: 12.0e-6, color: 0x9aa3ab, bias: 1.035, plot: '--ink' }, cuivre: { name: 'Cuivre', alpha: 17.0e-6, color: 0xc27a45, bias: .975, plot: '--copper' }, aluminium: { name: 'Aluminium', alpha: 23.0e-6, color: 0xd6dade, bias: .97, plot: '--cold' } };
+    const SETS = [30, 40, 50, 60, 70, 80];
+    const RATE = 1.5 / 60, TMAX = 80; /* chauffe continue ≈ 1,5 °C/min jusqu'à 80 °C */
+    const D = { mat: 'acier', L0: .4, on: false, speed: 10, amp: 1, Tamb: 21, Treg: 21, Tth: 21, Ttube: 21, Tz: 21, Tinit: 21,
+        off: -(0.3 + Math.random() * .5), jit: 0, series: {}, auto: false, prevSpeed: 10, pauseAt: true, paused: false, cur: null, showLbl: true };
+    const keyD = () => D.mat + '|' + D.L0;
+    const reading = () => r2(MAT[D.mat].alpha * D.L0 * 1000 * (D.Ttube - D.Tz) * MAT[D.mat].bias * (1 + (D.L0 - .4) * .02) + D.jit);
+    const nextPal = () => SETS.find(T => T > (D.cur || 0));
+    function stepD(dt) {
+        if (D.on && D.Treg < TMAX)
+            D.Treg = Math.min(TMAX, D.Treg + RATE * dt);
+        else if (!D.on)
+            D.Treg -= (D.Treg - D.Tamb) * dt / 2400;
+        D.Tth += (D.Treg + D.off - D.Tth) * (1 - Math.exp(-dt / 15)); /* thermomètre : léger décalage + retard */
+        D.Ttube += (D.Treg - D.Ttube) * (1 - Math.exp(-dt / (D.on ? 30 : 500))); /* tube : suit l'eau qui circule */
+        D.jit += (-D.jit * .02 + gauss() * .0012) * Math.min(dt, 1);
+        D.jit = Math.max(-.006, Math.min(.006, D.jit));
+    }
+    function msgD(t, warn) { $('#d-msg').className = 'note' + (warn ? ' warn' : ''); $('#d-msg').textContent = t; }
+    function checkPal() {
+        if (!D.on)
+            return;
+        const n = nextPal();
+        if (!n || D.Treg < n)
+            return;
+        D.cur = n;
+        if (D.auto) {
+            recordD(true);
+            if (n === TMAX) {
+                D.auto = false;
+                D.speed = D.prevSpeed;
+                syncD();
+                toast('Série automatique terminée');
+            }
+            return;
+        }
+        if (D.pauseAt) {
+            D.paused = true;
+            msgD(`Palier ${n} °C atteint : lisez le comparateur et le thermomètre, puis cliquez « Relever ».`);
+        }
+        else
+            msgD(`Palier ${n} °C : relevez vite, l'eau continue de chauffer.`);
+        syncD();
+    }
+    function updD(dt) { if (D.paused)
+        return; let rem = dt; while (rem > 0) {
+        const s = Math.min(.5, rem);
+        stepD(s);
+        rem -= s;
+        checkPal();
+        if (D.paused)
+            break;
+    } }
+    function zeroD() { D.Tz = D.Ttube; D.Tinit = r1(D.Tth); D.jit = 0; D.cur = null; D.paused = false; }
+    function fixTube() { D.Ttube = D.Treg; zeroD(); }
+    function recordD(silent) {
+        if (D.cur == null) {
+            toast('Attendez que le régulateur atteigne 30 °C');
+            return;
+        }
+        const k = keyD();
+        let s = D.series[k];
+        if (!s)
+            s = D.series[k] = { mat: D.mat, L0: D.L0, pts: {} };
+        const late = D.Treg - D.cur, ok = late <= 0.8;
+        s.pts[D.cur] = { Tth: r1(D.Tth), Tinit: D.Tinit, dL: reading(), ok, Treg: r1(D.Treg) };
+        const T = D.cur;
+        D.paused = false;
+        renderDTables();
+        drawD();
+        drawCR();
+        if (!silent) {
+            toast(ok ? `Relevé au palier ${T} °C enregistré` : `Relevé à ${T} °C, mais ${fmt(late, 1)} °C après le palier`);
+            msgD(T === TMAX ? 'Dernier palier relevé. Tracez dL/L₀ = f(ΔT) et déduisez α.' : `Chauffe en cours vers ${nextPal()} °C…`);
+        }
+    }
+    function syncD() {
+        setMat(D.mat);
+        setL0(D.L0);
+        setSpd(D.speed);
+        setAmp(D.amp);
+        document.querySelectorAll('#d-pal button').forEach(b => { const v = +b.dataset.v; const s = D.series[keyD()]; b.setAttribute('aria-pressed', String(!!(s && s.pts[v]))); b.style.outline = (D.cur === v) ? '2px solid var(--copper)' : ''; });
+        $('#d-on').textContent = D.on ? 'Arrêter le chauffage' : (D.cur != null ? 'Reprendre le chauffage' : 'Mettre en marche');
+        $('#d-auto').textContent = D.auto ? 'Arrêter la série auto' : 'Série auto 30 → 80 °C';
+        $('#d-pause').checked = D.pauseAt;
+        $('#d-tabtitle').textContent = `Tableau — ${MAT[D.mat].name.toLowerCase()}, L₀ = ${Math.round(D.L0 * 100)} cm`;
+        renderDTables();
+    }
+    const cancelAuto = () => { if (D.auto) {
+        D.speed = D.prevSpeed;
+        D.auto = false;
+    } };
+    function changeSetup() {
+        cancelAuto();
+        D.on = false;
+        fixTube();
+        if (D.Treg > D.Tamb + 4)
+            msgD('Tube changé. Le bain est encore chaud : videz-le et remplissez d\'eau froide avant de relancer.', true);
+        else
+            msgD('Tube fixé, comparateur à zéro. Mettez en marche : le bain chauffe de façon continue jusqu\'à 80 °C.');
+        syncD();
+        refreshTubeLook();
+    }
+    const setMat = seg('#d-mat', D.mat, v => { if (v === D.mat)
+        return; D.mat = v; changeSetup(); });
+    const setL0 = seg('#d-L0', D.L0, v => { v = +v; if (v === D.L0)
+        return; D.L0 = v; changeSetup(); });
+    const setSpd = seg('#d-spd', D.speed, v => { if (D.auto)
+        D.prevSpeed = +v;
+    else
+        D.speed = +v; syncD(); });
+    const setAmp = seg('#d-amp', D.amp, v => { D.amp = +v; syncD(); });
+    $('#d-pause').onchange = e => { D.pauseAt = e.target.checked; if (!D.pauseAt && D.paused) {
+        D.paused = false;
+    } syncD(); };
+    $('#d-on').onclick = () => {
+        cancelAuto();
+        if (!D.on && D.cur == null && D.Treg > D.Tamb + 4) {
+            msgD('Le bain est déjà chaud : videz-le et remplissez d\'eau froide pour démarrer une nouvelle série.', true);
+            return;
+        }
+        if (!D.on && D.cur == null)
+            zeroD();
+        D.on = !D.on;
+        D.paused = false;
+        if (D.on)
+            msgD(`Chauffe continue… prochain palier ${nextPal() || TMAX} °C.`);
+        syncD();
+    };
+    $('#d-rec').onclick = () => recordD(false);
+    $('#d-cool').onclick = () => {
+        cancelAuto();
+        D.on = false;
+        D.Treg = D.Tamb;
+        D.Tth = D.Tamb + D.off;
+        D.Ttube = D.Tamb;
+        zeroD();
+        D.off = -(0.3 + Math.random() * .5);
+        msgD('Bain rempli d\'eau froide, comparateur remis à zéro.');
+        syncD();
+    };
+    $('#d-auto').onclick = () => {
+        if (D.auto) {
+            cancelAuto();
+            syncD();
+            return;
+        }
+        D.Treg = D.Tamb;
+        D.Tth = D.Tamb + D.off;
+        D.Ttube = D.Tamb;
+        zeroD();
+        delete D.series[keyD()];
+        D.on = true;
+        D.auto = true;
+        D.prevSpeed = D.speed;
+        D.speed = 60;
+        msgD('Série automatique : relevé à chaque palier pendant la chauffe continue (×60).');
+        syncD();
+    };
+    $('#d-clear').onclick = () => { delete D.series[keyD()]; syncD(); drawD(); };
+    $('#d-lbl').onclick = e => { D.showLbl = !D.showLbl; e.target.textContent = D.showLbl ? 'Masquer les légendes' : 'Afficher les légendes'; stDil && stDil.setLabels(D.showLbl); };
+    $('#d-chartL0').onchange = drawD;
+    $('#d-copy').onclick = () => {
+        const rows = [['Matériau', 'L0 (cm)', 'Palier régulateur (°C)', 'T thermomètre (°C)', 'T initiale (°C)', 'ΔT (°C)', 'dL (mm)', 'dL/L0']];
+        Object.values(D.series).forEach(s => SETS.forEach(T => { const p = s.pts[T]; if (!p)
+            return; const dT = p.Tth - p.Tinit; rows.push([MAT[s.mat].name, Math.round(s.L0 * 100), T, fmtN(p.Tth, 1), fmtN(p.Tinit, 1), fmtN(dT, 1), fmtN(p.dL, 2), (p.dL / (s.L0 * 1000)).toExponential(3).replace('.', ',')]); }));
+        copyText(rows.map(r => r.join('\t')).join('\n'), 'Relevés copiés (collage direct dans Excel)');
+    };
+    function copyText(t, msg) {
+        const done = () => toast(msg);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(done, () => fallback());
+        }
+        else
+            fallback();
+        function fallback() { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try {
+            document.execCommand('copy');
+            done();
+        }
+        catch (e) {
+            toast('Copie impossible ici');
+        } ta.remove(); }
+    }
+    /* ---- instruments 2D (thermomètre à colonne + comparateur à cadran) ---- */
+    const SVGNS = 'http://www.w3.org/2000/svg';
+    function el(tag, attr, parent) { const e = document.createElementNS(SVGNS, tag); for (const k in attr)
+        e.setAttribute(k, attr[k]); parent && parent.appendChild(e); return e; }
+    const IN = {};
+    function buildInstr() {
+        const t = $('#i-thermo');
+        const yT = v => 200 - v * 1.75; /* 0 °C → y=200, 100 °C → y=25 */
+        el('rect', { x: 28, y: 14, width: 24, height: 200, rx: 12, fill: 'var(--panel)', stroke: 'var(--muted)', 'stroke-width': 1.5 }, t);
+        el('circle', { cx: 40, cy: 212, r: 14, fill: 'var(--hot)' }, t);
+        IN.merc = el('rect', { x: 36, y: yT(21), width: 8, height: 212 - yT(21), fill: 'var(--hot)' }, t);
+        for (let v = 0; v <= 100; v += 2) {
+            const y = yT(v), maj = v % 10 === 0;
+            el('line', { x1: 52, x2: maj ? 64 : 58, y1: y, y2: y, stroke: 'var(--ink)', 'stroke-width': maj ? 1.4 : .7 }, t);
+            if (maj)
+                el('text', { x: 66, y: y + 3.5, 'font-size': 10, 'font-family': 'var(--f-mono)', fill: 'var(--ink)' }, t).textContent = v;
+        }
+        [30, 40, 50, 60, 70, 80].forEach(v => el('line', { x1: 20, x2: 28, y1: yT(v), y2: yT(v), stroke: 'var(--copper)', 'stroke-width': 2 }, t));
+        el('text', { x: 4, y: 12, 'font-size': 10, 'font-family': 'var(--f-mono)', fill: 'var(--muted)' }, t).textContent = '°C';
+        IN.yT = yT;
+        const c = $('#i-comp');
+        el('circle', { cx: 100, cy: 100, r: 96, fill: 'var(--ink)' }, c);
+        el('circle', { cx: 100, cy: 100, r: 90, fill: 'var(--panel)' }, c);
+        for (let i = 0; i < 100; i++) {
+            const a = i / 100 * 2 * Math.PI - Math.PI / 2, L = i % 10 === 0 ? 14 : i % 5 === 0 ? 10 : 5, r = 88;
+            el('line', { x1: 100 + Math.cos(a) * r, y1: 100 + Math.sin(a) * r, x2: 100 + Math.cos(a) * (r - L), y2: 100 + Math.sin(a) * (r - L), stroke: 'var(--ink)', 'stroke-width': i % 10 === 0 ? 1.8 : .8 }, c);
+            if (i % 10 === 0)
+                el('text', { x: 100 + Math.cos(a) * 62, y: 100 + Math.sin(a) * 62 + 4.5, 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 600, 'font-family': 'var(--f-disp)', fill: 'var(--ink)' }, c).textContent = i;
+        }
+        /* petit cadran compte-tours : 1 tour = 1 mm */
+        el('circle', { cx: 100, cy: 132, r: 20, fill: 'none', stroke: 'var(--muted)', 'stroke-width': 1 }, c);
+        for (let i = 0; i < 10; i++) {
+            const a = i / 10 * 2 * Math.PI - Math.PI / 2;
+            el('line', { x1: 100 + Math.cos(a) * 20, y1: 132 + Math.sin(a) * 20, x2: 100 + Math.cos(a) * 16, y2: 132 + Math.sin(a) * 16, stroke: 'var(--muted)', 'stroke-width': 1 }, c);
+        }
+        IN.small = el('line', { x1: 100, y1: 132, x2: 100, y2: 116, stroke: 'var(--copper)', 'stroke-width': 2, 'stroke-linecap': 'round' }, c);
+        el('text', { x: 100, y: 84, 'text-anchor': 'middle', 'font-size': 10, 'font-family': 'var(--f-body)', fill: 'var(--muted)' }, c).textContent = '1/100 mm';
+        IN.big = el('line', { x1: 100, y1: 112, x2: 100, y2: 18, stroke: 'var(--hot)', 'stroke-width': 2.4, 'stroke-linecap': 'round' }, c);
+        el('circle', { cx: 100, cy: 100, r: 5, fill: 'var(--ink)' }, c);
+    }
+    function updInstr() {
+        const th = Math.max(0, Math.min(100, D.Tth)), y = IN.yT(th);
+        IN.merc.setAttribute('y', y);
+        IN.merc.setAttribute('height', 212 - y);
+        const r = Math.max(0, reading());
+        const frac = r % 1, turns = Math.floor(r);
+        IN.big.setAttribute('transform', `rotate(${(frac * 360).toFixed(2)} 100 100)`);
+        IN.small.setAttribute('transform', `rotate(${((r % 10) / 10 * 360).toFixed(2)} 100 132)`);
+        $('#i-th').textContent = fmt(D.Tth, 1);
+        $('#i-cmp').textContent = fmt(r, 2);
+        $('#i-reg').textContent = fmt(D.Treg, 1);
+        $('#i-regv').textContent = fmt(D.Treg, 1);
+        $('#i-heat').textContent = D.paused ? 'PALIER' : D.on ? (D.Treg < TMAX ? 'HEAT' : 'HOLD') : 'OFF';
+    }
+    function renderDTables() {
+        const s = D.series[keyD()], L = D.L0 * 1000;
+        const cell = (f) => SETS.map(T => { const p = s && s.pts[T]; if (!p)
+            return '<td class="na">·</td>'; const v = f(p); return `<td class="${p.ok ? '' : 'flag'}">${v}</td>`; }).join('');
+        updCRD();
+        $('#d-table').innerHTML = `<thead><tr><th>Grandeur</th>${SETS.map(T => `<th>${T} °C</th>`).join('')}</tr></thead><tbody>
+  <tr><th>Température réglée · palier (°C)</th>${SETS.map(T => `<td>${T}</td>`).join('')}</tr>
+  <tr><th>Température donnée par le thermomètre (°C)</th>${cell(p => fmt(p.Tth, 1))}</tr>
+  <tr><th>Température initiale (°C)</th>${cell(p => fmt(p.Tinit, 1))}</tr>
+  <tr><th>Variation de température ΔT (°C)</th>${cell(p => fmt(p.Tth - p.Tinit, 1))}</tr>
+  <tr><th>Variation de longueur dL (mm)</th>${cell(p => fmt(p.dL, 2))}</tr>
+  <tr><th>dL/L₀ (×10⁻⁴)</th>${cell(p => fmt(p.dL / L * 1e4, 3))}</tr></tbody>`;
+        const rows = Object.values(D.series).filter(s => Object.keys(s.pts).length >= 2).sort((a, b) => a.mat.localeCompare(b.mat) || a.L0 - b.L0);
+        $('#d-res').innerHTML = `<thead><tr><th>Série</th><th>n</th><th>α mesuré (10⁻⁶ K⁻¹)</th><th>α tableau</th><th>Écart</th><th>R²</th></tr></thead><tbody>` +
+            (rows.length ? rows.map(s => {
+                const pts = Object.values(s.pts).map(p => [p.Tth - p.Tinit, p.dL / (s.L0 * 1000)]);
+                const f = linfit(pts);
+                const a = f.a * 1e6, ref = MAT[s.mat].alpha * 1e6;
+                return `<tr><th>${MAT[s.mat].name}, ${Math.round(s.L0 * 100)} cm</th><td>${pts.length}</td><td>${fmt(a, 2)}</td><td>${fmt(ref, 1)}</td><td>${fmt((a - ref) / ref * 100, 1)} %</td><td>${fmt(f.r2, 4)}</td></tr>`;
+            }).join('')
+                : '<tr><td colspan="6" class="na" style="text-align:left">Relevez au moins deux températures pour une série.</td></tr>') + '</tbody>';
+    }
+    function drawD() {
+        const L0 = +$('#d-chartL0').value;
+        const series = [];
+        Object.values(D.series).filter(s => s.L0 === L0).forEach(s => { const pts = Object.values(s.pts).map(p => [p.Tth - p.Tinit, p.dL / (s.L0 * 1000) * 1e4]).sort((a, b) => a[0] - b[0]); series.push({ name: MAT[s.mat].name, color: cssv(MAT[s.mat].plot), pts, fit: true, square: s.mat === 'cuivre' }); });
+        chart($('#d-chart'), { series, xLabel: 'ΔT (°C)', yLabel: 'dL/L₀ (×10⁻⁴)', xMin: 0, yMin: 0, empty: `Aucune mesure à L₀ = ${Math.round(L0 * 100)} cm` });
+    }
+    /* ---- scène 3D dilatation ---- */
+    let stDil = null, DV = {};
+    const XD = 3.25;
+    function buildDil() {
+        stDil = makeStage($('#stage-dil'), [1.2, 4.4, 8.6], [-.6, .7, -.4]);
+        const S = stDil.scene;
+        const table = new THREE.Mesh(new THREE.BoxGeometry(16, .2, 7.5), M3(0xb9b1a4, { roughness: .9 }));
+        table.position.set(-.8, -.1, -.6);
+        S.add(table);
+        const rail = new THREE.Mesh(new THREE.BoxGeometry(8.6, .3, .7), M3(0x4a5259, { metalness: .4, roughness: .5 }));
+        rail.position.set(.6, .15, 0);
+        S.add(rail);
+        [.2, .4, .6].forEach(L => { const x = XD - L * 10; const m = new THREE.Mesh(new THREE.BoxGeometry(.06, .02, .72), M3(0xf2f2f2)); m.position.set(x, .31, 0); S.add(m); });
+        [-2.4, -.4, 1.6, 2.9].forEach(x => { const v = new THREE.Mesh(new THREE.BoxGeometry(.18, .2, .32), M3(0x2a2f33)); v.position.set(x, .4, 0); S.add(v); });
+        DV.clamp = new THREE.Mesh(new THREE.BoxGeometry(.3, .5, .55), M3(0xb05f27, { metalness: .3 }));
+        S.add(DV.clamp);
+        const tg = new THREE.CylinderGeometry(.085, .085, 1, 28, 1);
+        tg.rotateZ(Math.PI / 2);
+        DV.tubeMat = M3(MAT.acier.color, { metalness: .75, roughness: .32, emissive: 0x000000 });
+        DV.tube = new THREE.Mesh(tg, DV.tubeMat);
+        S.add(DV.tube);
+        // comparateur
+        const post = new THREE.Mesh(new THREE.BoxGeometry(.25, .5, .4), M3(0x2a2f33));
+        post.position.set(4.3, .25, 0);
+        S.add(post);
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(.48, .48, .2, 40), M3(0x30353a, { metalness: .5 }));
+        body.rotation.x = Math.PI / 2;
+        body.position.set(4.3, .98, 0);
+        S.add(body);
+        const face = new THREE.Mesh(new THREE.CircleGeometry(.44, 48), new THREE.MeshBasicMaterial({ map: dialFace('cmp').t }));
+        face.position.set(4.3, .98, .105);
+        S.add(face);
+        DV.needle = needle(.36, 0xc0392b);
+        DV.needle.position.set(4.3, .98, .12);
+        S.add(DV.needle);
+        const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .42, 16), M3(0xbfc4c8, { metalness: .7 }));
+        sleeve.rotation.z = Math.PI / 2;
+        sleeve.position.set(3.95, .55, 0);
+        S.add(sleeve);
+        const sg = new THREE.CylinderGeometry(.035, .035, 1, 12);
+        sg.rotateZ(Math.PI / 2);
+        DV.rod = new THREE.Mesh(sg, M3(0xe6e8ea, { metalness: .8, roughness: .2 }));
+        S.add(DV.rod);
+        const arm = new THREE.Mesh(new THREE.BoxGeometry(.12, .45, .12), M3(0x30353a));
+        arm.position.set(4.3, .6, 0);
+        S.add(arm);
+        // bain
+        const bx = -5.5, bz = -2, bw = 2.4, bd = 1.6, bh = 2.1;
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, bd), new THREE.MeshStandardMaterial({ color: 0xcfe6f2, transparent: true, opacity: .18, roughness: .1, depthWrite: false }));
+        glass.position.set(bx, bh / 2, bz);
+        S.add(glass);
+        const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(bw, bh, bd)), new THREE.LineBasicMaterial({ color: 0x7d8b95 }));
+        edges.position.copy(glass.position);
+        S.add(edges);
+        DV.waterMat = new THREE.MeshStandardMaterial({ color: waterColor(21), transparent: true, opacity: .62, roughness: .2, depthWrite: false });
+        const water = new THREE.Mesh(new THREE.BoxGeometry(bw - .08, 1.55, bd - .08), DV.waterMat);
+        water.position.set(bx, .8, bz);
+        S.add(water);
+        const head = new THREE.Mesh(new THREE.BoxGeometry(1.1, .9, 1.2), M3(0x2b3136));
+        head.position.set(bx + .55, bh + .4, bz + .05);
+        S.add(head);
+        DV.disp = canvasTex(256, 128, () => { });
+        const dp = new THREE.Mesh(new THREE.PlaneGeometry(.85, .42), new THREE.MeshBasicMaterial({ map: DV.disp.t }));
+        dp.position.set(bx + .55, bh + .48, bz + .66);
+        S.add(dp);
+        DV.led = new THREE.Mesh(new THREE.SphereGeometry(.05, 12, 12), new THREE.MeshBasicMaterial({ color: 0x333333 }));
+        DV.led.position.set(bx + .2, bh + .12, bz + .66);
+        S.add(DV.led);
+        const tglass = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 2.8, 16), new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: .35, depthWrite: false }));
+        tglass.position.set(bx - .75, 1.95, bz + .3);
+        S.add(tglass);
+        const bulb = new THREE.Mesh(new THREE.SphereGeometry(.08, 14, 14), M3(0xb0b8bf, { metalness: .9, roughness: .15 }));
+        bulb.position.set(bx - .75, .58, bz + .3);
+        S.add(bulb);
+        DV.merc = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, 1, 10), M3(0xb3b9be, { metalness: .95, roughness: .15 }));
+        S.add(DV.merc);
+        // tuyaux d'eau
+        const hoseA = new THREE.CatmullRomCurve3([new THREE.Vector3(bx + .55, bh + .1, bz + .6), new THREE.Vector3(bx + 1.5, 1.6, bz + 1), new THREE.Vector3(-3.4, 1.3, -.2), new THREE.Vector3(-3.1, .75, 0), new THREE.Vector3(-3.1, .6, 0)]);
+        const hoseB = new THREE.CatmullRomCurve3([new THREE.Vector3(2.85, .6, 0), new THREE.Vector3(2.85, .85, -.1), new THREE.Vector3(1.5, 1.6, -1.4), new THREE.Vector3(-2.5, 1.9, -2.2), new THREE.Vector3(bx + .9, bh + .2, bz - .3)]);
+        const hm = M3(0x2f3a3f, { roughness: .6, transparent: true, opacity: .75 });
+        [hoseA, hoseB].forEach(c => S.add(new THREE.Mesh(new THREE.TubeGeometry(c, 80, .06, 10), hm)));
+        [-3.1, 2.85].forEach(x => { const f = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .14, 10), M3(0xc9a24a, { metalness: .6 })); f.position.set(x, .62, 0); S.add(f); });
+        DV.curves = [hoseA, hoseB];
+        const N = 36;
+        DV.flow = new THREE.InstancedMesh(new THREE.SphereGeometry(.04, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), N * 2);
+        DV.flowU = [];
+        for (let i = 0; i < N * 2; i++)
+            DV.flowU.push(i < N ? i / N : (i - N) / N);
+        S.add(DV.flow);
+        stDil.label('Bain thermostaté', [bx - .3, bh + .15, bz]);
+        DV.thLbl = stDil.label('Thermomètre', [bx - .75, 3.5, bz + .3]);
+        DV.cmpLbl = stDil.label('Comparateur', [4.3, 1.65, 0]);
+        DV.regLbl = stDil.label('Régulateur', [bx + .55, bh + 1.05, bz]);
+        DV.tubeLbl = stDil.label('Tube en acier', [0, .8, 0]);
+        DV.fixLbl = stDil.label('Point fixe', [0, .95, 0]);
+        refreshTubeLook();
+    }
+    function refreshTubeLook() { if (!DV.tubeMat)
+        return; DV.tubeMat.color.setHex(MAT[D.mat].color); DV.tubeLbl.d.textContent = 'Tube en ' + MAT[D.mat].name.toLowerCase(); }
+    let tmpM, tmpV, tmpS, tmpQ;
+    function initTmp() { tmpM = new THREE.Matrix4(); tmpV = new THREE.Vector3(); tmpS = new THREE.Vector3(1, 1, 1); tmpQ = new THREE.Quaternion(); }
+    let lastDisp = 0;
+    function frameD(dt, now) {
+        if (!stDil)
+            return;
+        const r = reading(), xFix = XD - D.L0 * 10, left = -3.35, ext = r / 100 * D.amp, right = XD + ext;
+        DV.clamp.position.set(xFix, .5, 0);
+        DV.fixLbl.o.position.set(xFix, .95, 0);
+        DV.fixLbl.d.textContent = `Point fixe · L₀ = ${Math.round(D.L0 * 100)} cm`;
+        DV.tube.scale.set(right - left, 1, 1);
+        DV.tube.position.set((left + right) / 2, .55, 0);
+        DV.tubeLbl.o.position.set((xFix + XD) / 2, .8, 0);
+        const heat = Math.max(0, (D.Ttube - 25) / 60);
+        DV.tubeMat.emissive.setRGB(heat * .35, heat * .08, 0);
+        const body = 3.75;
+        DV.rod.scale.set(body - right, 1, 1);
+        DV.rod.position.set((right + body) / 2, .55, 0);
+        DV.needle.rotation.z = -((r % 1 + 1) % 1) * 2 * Math.PI;
+        DV.waterMat.color.copy(waterColor(D.Treg));
+        const h = Math.max(.02, (D.Tth + 5) / 100 * 2.4);
+        DV.merc.scale.set(1, h, 1);
+        DV.merc.position.set(-5.5 - .75, .6 + h / 2, -2 + .3);
+        DV.led.material.color.setHex(D.on ? (D.Treg < TMAX ? 0xff5533 : 0x33dd66) : 0x333333);
+        const N = DV.flowU.length / 2, col = waterColor(D.Treg).lerp(new THREE.Color(0xffffff), .25);
+        for (let i = 0; i < DV.flowU.length; i++) {
+            if (D.on && !D.paused)
+                DV.flowU[i] = (DV.flowU[i] + dt * .25) % 1;
+            const c = DV.curves[i < N ? 0 : 1];
+            c.getPointAt(DV.flowU[i], tmpV);
+            tmpS.setScalar(D.on ? 1 : 0.001);
+            tmpM.compose(tmpV, tmpQ, tmpS);
+            DV.flow.setMatrixAt(i, tmpM);
+        }
+        DV.flow.instanceMatrix.needsUpdate = true;
+        DV.flow.material.color.copy(col);
+        if (now - lastDisp > 250) {
+            lastDisp = now;
+            DV.thLbl.d.textContent = 'Thermomètre ' + fmt(D.Tth, 1) + ' °C';
+            DV.cmpLbl.d.textContent = 'Comparateur ' + fmt(reading(), 2) + ' mm';
+            DV.regLbl.d.textContent = 'Régulateur ' + fmt(D.Treg, 1) + ' °C';
+            const g = DV.disp.c.getContext('2d');
+            g.fillStyle = '#0d1a12';
+            g.fillRect(0, 0, 256, 128);
+            g.fillStyle = '#55f08a';
+            g.font = '600 22px "JetBrains Mono",monospace';
+            g.fillText('SET ' + TMAX.toFixed(1) + ' °C', 14, 40);
+            g.font = '600 44px "JetBrains Mono",monospace';
+            g.fillText(D.Treg.toFixed(1), 14, 100);
+            g.font = '500 20px "JetBrains Mono",monospace';
+            g.fillText(D.on ? (D.Treg < TMAX ? 'HEAT' : 'HOLD') : 'OFF', 170, 100);
+            DV.disp.t.needsUpdate = true;
+        }
+    }
+    function hudD() {
+        const st = $('#d-state');
+        const n = nextPal();
+        st.textContent = D.paused ? `Palier ${D.cur} °C · relevez` : D.auto ? 'Série auto · chauffe continue' : !D.on ? 'Arrêt' : D.Treg >= TMAX ? 'Palier final 80 °C' : 'Chauffe continue';
+        st.className = 'chip state ' + (D.paused ? 'ok' : !D.on ? 'off' : 'run');
+        $('#d-reg').textContent = fmt(D.Treg, 1);
+        $('#d-tb').textContent = fmt(D.Tth, 1);
+        $('#d-next').textContent = n || '—';
+        $('#d-dl').textContent = fmt(reading(), 2);
+        updInstr();
+        updSig();
+    }
+    /* ======================= TP 2 : POMPE A CHALEUR ======================= */
+    const R = { T: [-40, -30, -20, -10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+        P: [.512, .844, 1.327, 2.006, 2.928, 4.146, 5.717, 7.702, 10.166, 13.179, 16.818, 21.168, 26.33, 32.44, 39.72],
+        hf: [148.4, 161.1, 173.6, 186.7, 200, 213.6, 227.5, 241.7, 256.4, 271.6, 287.5, 304.3, 322.0, 341.0, 367.0],
+        hg: [374.0, 380.3, 386.6, 392.7, 398.6, 404.3, 409.8, 414.8, 419.4, 423.4, 426.6, 428.6, 429.0, 426.0, 412.0],
+        sg: [1.7655, 1.7519, 1.7413, 1.7334, 1.7271, 1.7218, 1.7172, 1.7123, 1.7071, 1.7004, 1.6907, 1.6766, 1.6559, 1.6330, 1.5880] };
+    const PCRIT = 40.59, HCRIT = 389.6, TCRIT = 101.06;
+    function interp(xa, ya, x) { if (x <= xa[0])
+        return ya[0] + (ya[1] - ya[0]) * (x - xa[0]) / (xa[1] - xa[0]); const n = xa.length; if (x >= xa[n - 1])
+        return ya[n - 2] + (ya[n - 1] - ya[n - 2]) * (x - xa[n - 2]) / (xa[n - 1] - xa[n - 2]); for (let i = 1; i < n; i++)
+        if (x <= xa[i])
+            return ya[i - 1] + (ya[i] - ya[i - 1]) * (x - xa[i - 1]) / (xa[i] - xa[i - 1]); }
+    const lnP = R.P.map(Math.log);
+    const Psat = T => Math.exp(interp(R.T, lnP, T)), Tsat = P => interp(lnP, R.T, Math.log(P));
+    const prop = (k, T) => interp(R.T, R[k], T);
+    const CPV = P => 0.80 + 0.032 * P; /* cp vapeur (kJ/kg·K), P absolue en bar */
+    const hv = (T, P) => { const Ts = Tsat(P); return prop('hg', Ts) + CPV(P) * (T - Ts); };
+    const sv = (T, P) => { const Ts = Tsat(P); return prop('sg', Ts) + CPV(P) * Math.log((T + 273.15) / (Ts + 273.15)); };
+    const Tfs = (s, P) => { const Ts = Tsat(P); return (Ts + 273.15) * Math.exp((s - prop('sg', Ts)) / CPV(P)) - 273.15; };
+    function cycle(PLg, PHg) {
+        const PLa = PLg + 1, PHa = PHg + 1, Te = Tsat(PLa), Tc = Tsat(PHa);
+        const h1 = prop('hg', Te), s1 = prop('sg', Te);
+        const T2 = Tfs(s1, PHa), h2 = hv(T2, PHa), h3 = prop('hf', Tc), h4 = h3, hf4 = prop('hf', Te);
+        const w = h2 - h1, qH = h3 - h2, qL = h1 - h4;
+        return { PLg, PHg, PLa, PHa, Te, Tc, T2, h1, h2, h3, h4, x: (h4 - hf4) / (h1 - hf4), w, qH, qL, e: qL / w, cop: -qH / w };
+    }
+    const MW = 4, CW = 4185, POW = 130, ETA = .12, HL = 4;
+    const P2 = { T0: 20, speed: 30, agit: true, showLbl: true, hide: false };
+    function resetP() { Object.assign(P2, { running: false, started: false, done: false, t: 0, TL: P2.T0, TH: P2.T0, sL: P2.T0, sH: P2.T0, ice: 0, Tamb: 21, rows: [], P1: null, P2v: null }); const p = Psat((P2.T0 + 21) / 2); P2.PLa = p; P2.PHa = p; }
+    P2.T0 = 20;
+    resetP();
+    const gaugeL = () => Math.max(-1, P2.PLa - 1), gaugeH = () => Math.max(-1, P2.PHa - 1);
+    function stepP(dt) {
+        if (P2.running) {
+            const Te = Math.max(-26, P2.TL - 10), Tc = P2.TH + 10, TeK = Te + 273.15, TcK = Tc + 273.15;
+            const e = ETA * TeK / (TcK - TeK);
+            const QL = e * POW, QH = QL + POW;
+            P2.TH += (QH - HL * (P2.TH - P2.Tamb)) * dt / (MW * CW);
+            let net = (-QL + HL * (P2.Tamb - P2.TL)) * dt;
+            if (P2.TL <= 0 && (net < 0 || P2.ice > 0)) {
+                P2.ice = Math.max(0, P2.ice - net / 334000);
+                P2.TL = 0;
+                if (P2.ice === 0 && net > 0)
+                    P2.TL += net / (MW * CW);
+            }
+            else
+                P2.TL += net / (MW * CW);
+            P2.PLa += (Psat(Te) - P2.PLa) * (1 - Math.exp(-dt / 12));
+            P2.PHa += (Psat(Tc) - P2.PHa) * (1 - Math.exp(-dt / 12));
+        }
+        else {
+            const eq = Psat((P2.TL + P2.TH) / 2);
+            P2.PLa += (eq - P2.PLa) * (1 - Math.exp(-dt / 40));
+            P2.PHa += (eq - P2.PHa) * (1 - Math.exp(-dt / 40));
+        }
+        const tau = P2.agit ? 4 : 110;
+        const k = 1 - Math.exp(-dt / tau);
+        P2.sL += (P2.TL - P2.sL) * k;
+        P2.sH += (P2.TH - P2.sH) * k;
+    }
+    function recP() { P2.rows.push({ t: Math.round(P2.t / 60), PL: r1(gaugeL() + gauss() * .03), PH: r1(gaugeH() + gauss() * .05), TL: r1(P2.sL + gauss() * .05), TH: r1(P2.sH + gauss() * .05) }); }
+    function updP(dt) {
+        if (!P2.running) {
+            stepP(Math.min(dt, 2));
+            return;
+        }
+        let rem = dt;
+        while (rem > 0 && P2.running) {
+            const next = P2.rows.length * 120;
+            let s = Math.min(.5, rem, next - P2.t);
+            if (s <= 0)
+                s = Math.min(.5, rem);
+            stepP(s);
+            P2.t += s;
+            rem -= s;
+            if (P2.t >= next - 1e-9) {
+                recP();
+                renderPTable();
+                drawP();
+                if (P2.t >= 1800 - 1e-6) {
+                    P2.running = false;
+                    P2.done = true;
+                    const last = P2.rows[P2.rows.length - 1];
+                    P2.P1 = last.PL;
+                    P2.P2v = last.PH;
+                    toast(`t = 30 min · P₁ = ${fmt(P2.P1, 1)} bar, P₂ = ${fmt(P2.P2v, 1)} bar`);
+                    syncP();
+                    break;
+                }
+            }
+        }
+    }
+    function syncP() { setT0(P2.T0); setSpdP(P2.speed); $('#p-go').textContent = !P2.started ? 'Brancher le compresseur (t = 0)' : P2.done ? 'Manipulation terminée' : P2.running ? 'Pause' : 'Reprendre'; $('#p-go').disabled = P2.done; $('#p-agit').checked = P2.agit; renderPTable(); drawP(); }
+    const setT0 = seg('#p-T0', P2.T0, v => { if (P2.started) {
+        toast('Réinitialisez avant de changer l\'eau');
+        return;
+    } P2.T0 = +v; resetP(); syncP(); });
+    const setSpdP = seg('#p-spd', P2.speed, v => { P2.speed = +v; syncP(); });
+    $('#p-agit').onchange = e => { P2.agit = e.target.checked; if (!P2.agit)
+        toast('Sans agitation, les sondes ne suivent plus l\'eau au contact des échangeurs'); };
+    $('#p-go').onclick = () => { if (P2.done)
+        return; if (!P2.started) {
+        P2.started = true;
+        P2.running = true;
+        P2.t = 0;
+        P2.rows = [];
+        recP();
+    }
+    else
+        P2.running = !P2.running; syncP(); };
+    $('#p-reset').onclick = () => { resetP(); syncP(); };
+    $('#p-hide').onchange = e => { P2.hide = e.target.checked; renderPTable(); };
+    $('#p-chsel').onchange = drawP;
+    $('#p-gocyc').onclick = () => { drawCycle(); $('#p-cyccard').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    $('#p-lbl').onclick = e => { P2.showLbl = !P2.showLbl; e.target.textContent = P2.showLbl ? 'Masquer les légendes' : 'Afficher les légendes'; stPac && stPac.setLabels(P2.showLbl); };
+    function derived() {
+        const W = POW * 120;
+        return P2.rows.map((r, i) => {
+            const TLK = r.TL + 273.15, THK = r.TH + 273.15, dT = r.TH - r.TL;
+            const o = Object.assign(Object.assign({}, r), { TLK, THK, dT, eC: dT > 0.05 ? TLK / dT : NaN, copC: dT > 0.05 ? THK / dT : NaN });
+            if (i > 0) {
+                const p = P2.rows[i - 1];
+                o.QH = -MW * CW * (r.TH - p.TH);
+                o.QL = -MW * CW * (r.TL - p.TL);
+                o.W = W;
+                o.e = o.QL / W;
+                o.cop = -o.QH / W;
+            }
+            return o;
+        });
+    }
+    function renderPTable() {
+        const d = derived(), hc = P2.hide ? ' hidecalc' : '';
+        const head = ['t (mn)', 'P<sub>L</sub> (bar)', 'P<sub>H</sub> (bar)', 'T<sub>L</sub> (°C)', 'T<sub>L</sub> (K)', 'T<sub>H</sub> (°C)', 'T<sub>H</sub> (K)'];
+        const calc = ['ΔT = T<sub>H</sub>−T<sub>L</sub>', 'Q<sub>H</sub> (J)', 'Q<sub>L</sub> (J)', 'W (J)', 'e(t)', 'e<sub>Carnot</sub>', 'COP(t)', 'COP<sub>Carnot</sub>'];
+        let h = `<thead><tr>${head.map(x => `<th>${x}</th>`).join('')}${calc.map(x => `<th class="calc${hc}">${x}</th>`).join('')}</tr></thead><tbody>`;
+        for (let k = 0; k <= 15; k++) {
+            const r = d[k];
+            const cur = r && k === d.length - 1 && P2.running;
+            if (!r) {
+                h += `<tr><td>${k * 2}</td>${'<td class="na">·</td>'.repeat(6)}${calc.map(() => `<td class="na calc${hc}">·</td>`).join('')}</tr>`;
+                continue;
+            }
+            const c = (v, dd) => `<td class="calc${hc}${isFinite(v) ? '' : ' na'}">${isFinite(v) ? fmt(v, dd) : (v === undefined ? '·' : '∞')}</td>`;
+            h += `<tr class="${cur ? 'cur' : ''}"><td>${r.t}</td><td>${fmt(r.PL, 1)}</td><td>${fmt(r.PH, 1)}</td><td>${fmt(r.TL, 1)}</td><td>${fmt(r.TLK, 2)}</td><td>${fmt(r.TH, 1)}</td><td>${fmt(r.THK, 2)}</td>${c(r.dT, 1)}${c(r.QH, 0)}${c(r.QL, 0)}${c(r.W, 0)}${c(r.e, 2)}${c(r.eC, 1)}${c(r.cop, 2)}${c(r.copC, 1)}</tr>`;
+        }
+        $('#p-table').innerHTML = h + '</tbody>';
+        updCRP();
+    }
+    $('#p-copy').onclick = () => {
+        const d = derived();
+        const rows = [['t (mn)', 'PL (bar)', 'PH (bar)', 'TL (°C)', 'TL (K)', 'TH (°C)', 'TH (K)', 'ΔT', 'QH (J)', 'QL (J)', 'W (J)', 'e', 'e Carnot', 'COP', 'COP Carnot']];
+        const f = (v, dd) => isFinite(v) ? fmtN(v, dd) : '';
+        d.forEach(r => rows.push([r.t, f(r.PL, 1), f(r.PH, 1), f(r.TL, 1), f(r.TLK, 2), f(r.TH, 1), f(r.THK, 2), f(r.dT, 1), f(r.QH, 0), f(r.QL, 0), f(r.W, 0), f(r.e, 3), f(r.eC, 2), f(r.cop, 3), f(r.copC, 2)]));
+        copyText(rows.map(r => r.join('\t')).join('\n'), 'Tableau copié (collage direct dans Excel)');
+    };
+    function drawP() {
+        const d = derived(), m = $('#p-chsel').value, CLIP = 20;
+        const T = d.map(r => r.t);
+        let o;
+        if (m === 'T') {
+            $('#p-chtitle').textContent = 'Températures des réservoirs';
+            $('#p-chnote').textContent = 'Le seau bleu se refroidit (source froide), le seau rouge se réchauffe (source chaude).';
+            o = { series: [{ name: 'T_H(t)', color: cssv('--hot'), pts: d.map(r => [r.t, r.TH]) }, { name: 'T_L(t)', color: cssv('--cold'), pts: d.map(r => [r.t, r.TL]), square: true }], yLabel: 'T (°C)' };
+        }
+        else {
+            const k = m === 'e' ? 'e' : 'cop', kc = m === 'e' ? 'eC' : 'copC';
+            $('#p-chtitle').textContent = m === 'e' ? 'Efficacité du réfrigérateur' : 'COP de la pompe à chaleur';
+            $('#p-chnote').textContent = `Les valeurs de Carnot très élevées en début d'expérience (T_H ≈ T_L) sont écrêtées à ${CLIP}.`;
+            o = { series: [{ name: m === 'e' ? 'e(t)' : 'COP(t)', color: cssv('--copper'), pts: d.filter(r => isFinite(r[k])).map(r => [r.t, r[k]]) }, { name: m === 'e' ? 'e Carnot' : 'COP Carnot', color: cssv('--ink'), dash: true, square: true, pts: d.filter(r => isFinite(r[kc])).map(r => [r.t, Math.min(r[kc], CLIP)]) }], yLabel: m === 'e' ? 'e' : 'COP', yMax: CLIP };
+        }
+        chart($('#p-chart'), Object.assign(o, { xLabel: 't (min)', xMin: 0, xMax: 30, empty: 'Branchez le compresseur pour démarrer les relevés' }));
+        drawCycle();
+    }
+    const PHR = { h0: 140, h1: 470, p0: 0.5, p1: 45 };
+    const al = (c, a) => c.length === 7 ? c + Math.round(a * 255).toString(16).padStart(2, '0') : c;
+    function phState(h, P) {
+        if (P > PCRIT)
+            return { txt: 'fluide supercritique' };
+        const Ts = Tsat(P), hf = prop('hf', Ts), hg = prop('hg', Ts);
+        if (h < hf)
+            return { T: interp(R.hf, R.T, h), txt: 'liquide' };
+        if (h <= hg)
+            return { T: Ts, x: (h - hf) / (hg - hf), txt: 'liquide + vapeur' };
+        const T = Ts + (h - hg) / CPV(P);
+        return { T, s: sv(T, P), txt: 'vapeur surchauffée' };
+    }
+    function drawPH(cv, cycles, o = {}) {
+        cv._redraw = () => drawPH(cv, cycles, o);
+        if (!cv._hov) {
+            cv._hov = 1;
+            const mv = e => { const r = cv.getBoundingClientRect(); cv._cur = [e.clientX - r.left, e.clientY - r.top]; cv._redraw(); };
+            cv.addEventListener('pointermove', mv);
+            cv.addEventListener('pointerdown', mv);
+            cv.addEventListener('pointerleave', () => { cv._cur = null; cv._redraw(); });
+        }
+        const P = prep(cv);
+        if (!P)
+            return;
+        const { g, W, H } = P;
+        const ink = cssv('--ink'), muted = cssv('--muted'), grid = cssv('--grid'), cop = cssv('--copper'), hot = cssv('--hot'), cold = cssv('--cold'), okc = cssv('--ok'), panel = cssv('--panel'), body = cssv('--f-body'), mono = cssv('--f-mono');
+        const pad = { l: 50, r: 14, t: 30, b: 40 }, lp0 = Math.log10(PHR.p0), lp1 = Math.log10(PHR.p1), PW = W - pad.l - pad.r, PHt = H - pad.t - pad.b;
+        const X = h => pad.l + (h - PHR.h0) / (PHR.h1 - PHR.h0) * PW, Y = p => H - pad.b - (Math.log10(p) - lp0) / (lp1 - lp0) * PHt;
+        const iX = x => PHR.h0 + (x - pad.l) / PW * (PHR.h1 - PHR.h0), iY = y => Math.pow(10, lp0 + (H - pad.b - y) / PHt * (lp1 - lp0));
+        const line = (pts, col, w, dash) => { if (pts.length < 2)
+            return; g.strokeStyle = col; g.lineWidth = w; g.setLineDash(dash || []); g.beginPath(); pts.forEach((q, i) => i ? g.lineTo(X(q[0]), Y(q[1])) : g.moveTo(X(q[0]), Y(q[1]))); g.stroke(); g.setLineDash([]); };
+        const logs = (a, b, n) => { const r = []; for (let i = 0; i <= n; i++)
+            r.push(a * Math.pow(b / a, i / n)); return r; };
+        const isoT = al(ink, .42), isoS = al(okc, .75), isoX = al(muted, .7);
+        g.save();
+        g.beginPath();
+        g.rect(pad.l, pad.t, PW, PHt);
+        g.clip();
+        for (let h = 140; h <= 470; h += 10) {
+            g.strokeStyle = grid;
+            g.lineWidth = h % 50 === 0 ? 1.3 : .6;
+            g.beginPath();
+            g.moveTo(X(h), pad.t);
+            g.lineTo(X(h), H - pad.b);
+            g.stroke();
+        }
+        [0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40].forEach(q => { g.strokeStyle = grid; g.lineWidth = [1, 10].includes(q) ? 1.3 : .6; g.beginPath(); g.moveTo(pad.l, Y(q)); g.lineTo(W - pad.r, Y(q)); g.stroke(); });
+        /* lignes de titre x */
+        const Tq = [];
+        for (let T = -40; T <= 100; T += 2)
+            Tq.push(T);
+        g.font = '10px ' + mono;
+        g.fillStyle = muted;
+        g.textAlign = 'center';
+        for (let x = 1; x <= 9; x++) {
+            line(Tq.map(T => [prop('hf', T) + x / 10 * (prop('hg', T) - prop('hf', T)), Psat(T)]), isoX, .7, [3, 3]);
+            const h = prop('hf', -38) + x / 10 * (prop('hg', -38) - prop('hf', -38));
+            g.fillText('0,' + x, X(h), Y(Psat(-38)) - 4);
+        }
+        /* isothermes (°C) */
+        g.font = '10px ' + mono;
+        for (let T = -40; T <= 150; T += 10) {
+            const pts = [];
+            if (T <= 100) {
+                const Ps = Psat(T);
+                pts.push([prop('hf', T), PHR.p1], [prop('hf', T), Ps], [prop('hg', T), Ps]);
+                logs(Ps, PHR.p0, 40).slice(1).forEach(q => pts.push([hv(T, q), q]));
+            }
+            else
+                logs(PHR.p1, PHR.p0, 50).forEach(q => { if (Tsat(q) < T)
+                    pts.push([hv(T, q), q]); });
+            line(pts, isoT, T % 50 === 0 ? 1.1 : .7);
+            const pl = Math.min(0.62, T <= 100 ? Psat(T) * 0.9 : 0.62), hl = hv(T, pl);
+            if (hl < PHR.h1 - 4) {
+                g.fillStyle = ink;
+                g.textAlign = 'center';
+                g.fillText(T + '°', X(hl), Y(pl) + 12);
+            }
+        }
+        /* isentropes s (kJ/kg·K) */
+        for (let k = 0; k <= 12; k++) {
+            const sS = 1.66 + k * 0.02, pts = [];
+            logs(PHR.p0, PHR.p1, 60).forEach(q => { if (q >= PCRIT)
+                return; const Ts = Tsat(q); if (sS < prop('sg', Ts))
+                return; const T = Tfs(sS, q), h = hv(T, q); if (h <= PHR.h1 + 20)
+                pts.push([h, q]); });
+            line(pts, isoS, .9, [7, 3]);
+            const last = pts[pts.length - 1];
+            if (last && k % 2 === 0 && X(last[0]) < W - pad.r - 16) {
+                const tx = X(last[0]);
+                g.fillStyle = okc;
+                g.textAlign = 'center';
+                g.fillText(fmtN(sS, 2), tx, Math.max(pad.t + 10, Y(last[1]) + 12));
+            }
+        }
+        /* courbe de saturation */
+        line(R.T.map((T, i) => [R.hf[i], R.P[i]]).concat([[HCRIT, PCRIT]]), ink, 2.2);
+        line(R.T.map((T, i) => [R.hg[i], R.P[i]]).concat([[HCRIT, PCRIT]]), ink, 2.2);
+        g.fillStyle = ink;
+        g.beginPath();
+        g.arc(X(HCRIT), Y(PCRIT), 3.5, 0, 7);
+        g.fill();
+        g.font = '600 11px ' + body;
+        g.textAlign = 'left';
+        g.fillText('Point critique 101 °C', X(HCRIT) + 6, Y(PCRIT) + 12);
+        g.fillStyle = muted;
+        g.font = '600 11px ' + body;
+        g.textAlign = 'center';
+        g.fillText('LIQUIDE', X(172), Y(18));
+        g.fillText('LIQUIDE + VAPEUR', X(300), Y(1.15));
+        g.fillText('VAPEUR', X(445), Y(4.5));
+        g.fillText('SURCHAUFFÉE', X(445), Y(4.5) + 13);
+        /* cycles */
+        cycles.forEach((c, ci) => {
+            const cy = c.cy, pts = [[cy.h1, cy.PLa], [cy.h2, cy.PHa], [cy.h3, cy.PHa], [cy.h4, cy.PLa]];
+            const full = c.style !== 'outline';
+            if (full) {
+                g.fillStyle = al(cop, .12);
+                g.beginPath();
+                pts.forEach((q, i) => i ? g.lineTo(X(q[0]), Y(q[1])) : g.moveTo(X(q[0]), Y(q[1])));
+                g.closePath();
+                g.fill();
+                /* lignes de construction : lecture des enthalpies et des pressions */
+                g.setLineDash([4, 3]);
+                g.lineWidth = 1;
+                g.strokeStyle = al(ink, .65);
+                [[cy.h1, cy.PLa], [cy.h2, cy.PHa], [cy.h3, cy.PHa]].forEach(q => { g.beginPath(); g.moveTo(X(q[0]), Y(q[1])); g.lineTo(X(q[0]), H - pad.b); g.stroke(); });
+                [cy.PLa, cy.PHa].forEach(q => { g.beginPath(); g.moveTo(pad.l, Y(q)); g.lineTo(X(cy.h4), Y(q)); g.stroke(); });
+                g.setLineDash([]);
+                g.font = '600 11px ' + mono;
+                g.fillStyle = ink;
+                g.textAlign = 'left';
+                [['h₃=h₄', cy.h3], ['h₁', cy.h1], ['h₂', cy.h2]].forEach(([t, h], i) => { g.save(); g.translate(X(h) + 3, H - pad.b - 4 - (i === 2 ? 0 : 0)); g.rotate(-Math.PI / 2); g.fillText(`${t} = ${fmtN(h, 0)}`, 0, 0); g.restore(); });
+                g.fillText(`P₁ = ${fmtN(cy.PLa, 2)} bar abs`, pad.l + 4, Y(cy.PLa) + 13);
+                g.fillText(`P₂ = ${fmtN(cy.PHa, 2)} bar abs`, pad.l + 4, Y(cy.PHa) - 5);
+            }
+            const segc = full ? [cop, hot, muted, cold] : [c.color, c.color, c.color, c.color];
+            for (let i = 0; i < 4; i++) {
+                const A = pts[i], B = pts[(i + 1) % 4];
+                g.strokeStyle = segc[i];
+                g.lineWidth = full ? 2.8 : 2;
+                g.setLineDash(full ? [] : [6, 4]);
+                g.beginPath();
+                g.moveTo(X(A[0]), Y(A[1]));
+                g.lineTo(X(B[0]), Y(B[1]));
+                g.stroke();
+                g.setLineDash([]);
+                const mx = (X(A[0]) + X(B[0])) / 2, my = (Y(A[1]) + Y(B[1])) / 2, an = Math.atan2(Y(B[1]) - Y(A[1]), X(B[0]) - X(A[0]));
+                g.fillStyle = segc[i];
+                g.beginPath();
+                g.moveTo(mx + 8 * Math.cos(an), my + 8 * Math.sin(an));
+                g.lineTo(mx - 6 * Math.cos(an) - 6 * Math.sin(an), my - 6 * Math.sin(an) + 6 * Math.cos(an));
+                g.lineTo(mx - 6 * Math.cos(an) + 6 * Math.sin(an), my - 6 * Math.sin(an) - 6 * Math.cos(an));
+                g.fill();
+            }
+            g.font = '700 14px ' + body;
+            const lab = [[10, 16], [8, -8], [-16, -8], [-16, 18]];
+            pts.forEach((q, i) => { g.fillStyle = full ? ink : c.color; g.beginPath(); g.arc(X(q[0]), Y(q[1]), 4, 0, 7); g.fill(); g.textAlign = 'left'; g.fillText(String(i + 1), X(q[0]) + lab[i][0], Y(q[1]) + lab[i][1]); });
+            if (full) {
+                g.font = '700 13px ' + body;
+                g.textAlign = 'center';
+                g.fillStyle = hot;
+                g.fillText("q'H", (X(cy.h2) + X(cy.h3)) / 2, Y(cy.PHa) - 10);
+                g.fillStyle = cold;
+                g.fillText("q'L", (X(cy.h4) + X(cy.h1)) / 2, Y(cy.PLa) + 20);
+                g.fillStyle = cop;
+                g.textAlign = 'left';
+                g.fillText("w'", (X(cy.h1) + X(cy.h2)) / 2 + 12, (Y(cy.PLa) + Y(cy.PHa)) / 2 + 4);
+            }
+        });
+        if (o.empty && !cycles.length) {
+            g.fillStyle = ink;
+            g.font = '600 13px ' + body;
+            g.textAlign = 'center';
+            g.fillText(o.empty, pad.l + PW / 2, pad.t + PHt * .42);
+        }
+        /* lecture au pointeur */
+        const cu = cv._cur;
+        if (cu && cu[0] > pad.l && cu[0] < W - pad.r && cu[1] > pad.t && cu[1] < H - pad.b) {
+            const h = iX(cu[0]), q = iY(cu[1]), st = phState(h, q);
+            g.strokeStyle = al(ink, .6);
+            g.lineWidth = 1;
+            g.beginPath();
+            g.moveTo(cu[0], pad.t);
+            g.lineTo(cu[0], H - pad.b);
+            g.moveTo(pad.l, cu[1]);
+            g.lineTo(W - pad.r, cu[1]);
+            g.stroke();
+            const L = [`h = ${fmtN(h, 1)} kJ/kg`, `P = ${fmtN(q, 2)} bar abs (${fmtN(q - 1, 2)} lue)`, st.txt];
+            if (st.T != null)
+                L.push(`T = ${fmtN(st.T, 1)} °C`);
+            if (st.x != null)
+                L.push(`x = ${fmtN(st.x, 2)}`);
+            if (st.s != null)
+                L.push(`s = ${fmtN(st.s, 3)} kJ/kg·K`);
+            g.font = '12px ' + mono;
+            const bw = Math.max(...L.map(t => g.measureText(t).width)) + 16, bh = L.length * 16 + 10;
+            let bx = cu[0] + 12, by = cu[1] + 12;
+            if (bx + bw > W - pad.r)
+                bx = cu[0] - bw - 12;
+            if (by + bh > H - pad.b)
+                by = cu[1] - bh - 12;
+            g.fillStyle = al(panel, .95);
+            g.strokeStyle = ink;
+            g.lineWidth = 1;
+            g.beginPath();
+            g.rect(bx, by, bw, bh);
+            g.fill();
+            g.stroke();
+            g.fillStyle = ink;
+            g.textAlign = 'left';
+            L.forEach((t, i) => g.fillText(t, bx + 8, by + 18 + i * 16));
+        }
+        g.restore();
+        /* axes */
+        g.strokeStyle = ink;
+        g.lineWidth = 1;
+        g.strokeRect(pad.l, pad.t, PW, PHt);
+        g.font = '11px ' + mono;
+        g.fillStyle = muted;
+        g.textAlign = 'center';
+        for (let h = 150; h <= 450; h += 50)
+            g.fillText(h, X(h), H - pad.b + 15);
+        g.textAlign = 'right';
+        [0.5, 0.7, 1, 1.5, 2, 3, 5, 7, 10, 15, 20, 30, 40].forEach(q => g.fillText(fmtN(q, q < 1 || q === 1.5 ? 1 : 0), pad.l - 5, Y(q) + 4));
+        g.fillStyle = ink;
+        g.font = '600 12px ' + body;
+        g.textAlign = 'center';
+        g.fillText('Enthalpie h (kJ/kg)', pad.l + PW / 2, H - 8);
+        g.save();
+        g.translate(12, pad.t + PHt / 2);
+        g.rotate(-Math.PI / 2);
+        g.fillText('Pression absolue (bar, échelle log)', 0, 0);
+        g.restore();
+        /* légende */
+        g.font = '600 11px ' + body;
+        g.textAlign = 'left';
+        let lx = pad.l;
+        const leg = [[ink, [], 2.2, 'saturation'], [isoT, [], 1, 'isothermes (°C)'], [isoS, [7, 3], 1, 'isentropes s (kJ/kg·K)'], [isoX, [3, 3], 1, 'titre x']];
+        cycles.forEach(c => leg.push([c.style === 'outline' ? c.color : cop, c.style === 'outline' ? [6, 4] : [], 2.4, c.name || 'cycle']));
+        leg.forEach(([c, d, w, t]) => { const tw = g.measureText(t).width; if (lx + tw + 30 > W)
+            return; g.strokeStyle = c; g.lineWidth = w; g.setLineDash(d); g.beginPath(); g.moveTo(lx, 14); g.lineTo(lx + 18, 14); g.stroke(); g.setLineDash([]); g.fillStyle = ink; g.fillText(t, lx + 22, 18); lx += tw + 36; });
+    }
+    function explainHTML(cy, tag) {
+        if (!cy)
+            return '<p class="note">Faites la manipulation jusqu’à t = 30 min pour obtenir P₁ et P₂ : l’explication s’affichera avec vos valeurs.</p>';
+        const V = (x, d, u) => `<span class="val">${fmt(x, d)}${u ? ' ' + u : ''}</span>`;
+        const Ts = Tsat(cy.PLa), hf4 = prop('hf', Ts), hg4 = prop('hg', Ts), s1 = prop('sg', cy.Te);
+        const bil = cy.w + cy.qH + cy.qL;
+        return `<h3 class="ex-title">Comment tracer le cycle idéal, étape par étape</h3>
+  <p class="ex-intro">Le fluide R134a tourne en boucle dans quatre organes : compresseur (1→2), condenseur dans le seau rouge (2→3), détendeur (3→4) et évaporateur dans le seau bleu (4→1). Sur le diagramme (P, h), chaque organe correspond à un segment. Valeurs ${tag} : P₁ = ${V(cy.PLg, 1, 'bar')} et P₂ = ${V(cy.PHg, 1, 'bar')} lues sur les manomètres.</p>
+  <ol class="steps">
+   <li class="p0"><h4>Étape 0 · Placer les deux pressions</h4>
+    <p class="how"><b>Comment :</b> les manomètres donnent une pression relative. On ajoute la pression atmosphérique : P absolue = P lue + 1 bar. Donc P₁ abs = ${V(cy.PLa, 2, 'bar')} et P₂ abs = ${V(cy.PHa, 2, 'bar')}. On trace deux droites horizontales (isobares) à ces pressions. L’axe des pressions est logarithmique : repérez bien les graduations.</p>
+    <p><b>Ce que c’est :</b> P₁ est la basse pression (côté évaporateur, manomètre bleu BP), P₂ la haute pression (côté condenseur, manomètre rouge HP). Chaque pression impose une température de changement d’état : évaporation à ${V(cy.Te, 1, '°C')}, condensation à ${V(cy.Tc, 1, '°C')}.</p></li>
+   <li><h4>Point 1 · Entrée du compresseur : vapeur saturée</h4>
+    <p class="how"><b>Comment :</b> point 1 = intersection de l’isobare P₁ avec la <b>courbe de vapeur saturée</b> (branche droite de la cloche, titre x = 1). On descend une verticale jusqu’à l’axe des enthalpies et on lit h₁ = ${V(cy.h1, 1, 'kJ/kg')}. On note aussi l’isentrope qui passe par ce point : s₁ ≈ ${V(s1, 3, 'kJ/(kg·K)')}.</p>
+    <p><b>Ce que c’est :</b> à la sortie de l’évaporateur, tout le liquide s’est vaporisé. Le fluide est une vapeur juste saturée, à ${V(cy.Te, 1, '°C')}.</p></li>
+   <li><h4>Point 2 · Sortie du compresseur : vapeur surchauffée</h4>
+    <p class="how"><b>Comment :</b> depuis le point 1, on suit la courbe <b>isentrope s = s₁</b> (lignes vertes en pointillés, inclinées vers la droite) en montant jusqu’à l’isobare P₂. L’intersection est le point 2. On lit h₂ = ${V(cy.h2, 1, 'kJ/kg')} et, sur l’isotherme qui passe par là, T₂ ≈ ${V(cy.T2, 1, '°C')}.</p>
+    <p><b>Ce que c’est :</b> dans le cycle idéal, la compression est adiabatique (rapide, sans échange de chaleur) et réversible (sans frottement), donc <b>isentropique</b>. La vapeur sort plus chaude que la température de condensation : elle est <b>surchauffée</b>.</p></li>
+   <li><h4>Point 3 · Sortie du condenseur : liquide saturé</h4>
+    <p class="how"><b>Comment :</b> depuis le point 2, on suit l’isobare P₂ vers la gauche jusqu’à la <b>courbe de liquide saturé</b> (branche gauche de la cloche, x = 0). C’est le point 3. On lit h₃ = ${V(cy.h3, 1, 'kJ/kg')}.</p>
+    <p><b>Ce que c’est :</b> dans le condenseur (serpentin du seau rouge), la pression reste égale à P₂. Le fluide se refroidit d’abord (désurchauffe, de 2 jusqu’à la courbe de vapeur saturée), puis se condense à température constante ${V(cy.Tc, 1, '°C')} (palier horizontal dans la cloche). Il cède de la chaleur à l’eau du seau rouge, qui se réchauffe.</p></li>
+   <li><h4>Point 4 · Sortie du détendeur : mélange liquide + vapeur</h4>
+    <p class="how"><b>Comment :</b> depuis le point 3, on descend une <b>verticale</b> (h constant) jusqu’à l’isobare P₁. C’est le point 4, avec h₄ = h₃ = ${V(cy.h4, 1, 'kJ/kg')}. Il tombe à l’intérieur de la cloche.</p>
+    <p><b>Ce que c’est :</b> le détendeur est un simple étranglement : pas de travail (w = 0) et pas de chaleur échangée (q = 0), donc l’enthalpie ne change pas (détente <b>isenthalpique</b>). La pression chute de P₂ à P₁ et une partie du liquide se vaporise. Le titre en vapeur se lit sur les lignes x ou se calcule :
+    x₄ = (h₄ − h<sub>f</sub>)/(h<sub>g</sub> − h<sub>f</sub>) = (${fmt(cy.h4, 1)} − ${fmt(hf4, 1)})/(${fmt(hg4, 1)} − ${fmt(hf4, 1)}) = ${V(cy.x, 2)}. Soit environ ${fmt(cy.x * 100, 0)} % de vapeur et ${fmt(100 - cy.x * 100, 0)} % de liquide.</p></li>
+   <li><h4>Fermeture du cycle · 4 → 1 dans l’évaporateur</h4>
+    <p><b>Ce que c’est :</b> de 4 à 1 on suit l’isobare P₁ vers la droite. Dans le serpentin du seau bleu, le liquide restant s’évapore à température constante ${V(cy.Te, 1, '°C')} en prenant de la chaleur à l’eau, qui se refroidit. On revient au point 1 : le cycle est fermé.</p></li>
+  </ol>
+  <h3 class="ex-title">Ce que représentent w', q'<sub>H</sub> et q'<sub>L</sub></h3>
+  <p class="ex-intro">Pour un fluide qui traverse un organe en régime permanent (énergies cinétique et potentielle négligées), le premier principe s’écrit Δh = w' + q'. Les échanges par kilogramme de fluide se lisent donc directement comme des différences d’enthalpie, donc des longueurs horizontales sur le diagramme. Convention : ce que le fluide reçoit est positif.</p>
+  <div class="extbl"><table><thead><tr><th>Grandeur</th><th>Où ?</th><th>Formule</th><th class="num">Valeur</th><th>Signification</th></tr></thead><tbody>
+   <tr><th><span class="sw" style="background:var(--copper)"></span>w'</th><td>Compresseur, 1 → 2</td><td>w' = h₂ − h₁</td><td class="num">${V(cy.w, 1, 'kJ/kg')}</td><td>Travail reçu par 1 kg de fluide. Positif : le fluide reçoit l’énergie électrique du moteur.</td></tr>
+   <tr><th><span class="sw" style="background:var(--hot)"></span>q'<sub>H</sub></th><td>Condenseur, 2 → 3</td><td>q'<sub>H</sub> = h₃ − h₂</td><td class="num">${V(cy.qH, 1, 'kJ/kg')}</td><td>Chaleur échangée avec la source chaude (seau rouge). Négative : le fluide la cède à l’eau. C’est l’effet utile de la pompe à chaleur.</td></tr>
+   <tr><th><span class="sw" style="background:var(--cold)"></span>q'<sub>L</sub></th><td>Évaporateur, 4 → 1</td><td>q'<sub>L</sub> = h₁ − h₄</td><td class="num">${V(cy.qL, 1, 'kJ/kg')}</td><td>Chaleur échangée avec la source froide (seau bleu). Positive : le fluide la prend à l’eau. C’est l’effet utile du réfrigérateur.</td></tr>
+   <tr><th>—</th><td>Détendeur, 3 → 4</td><td>h₄ = h₃</td><td class="num"><span class="val">0</span></td><td>Ni travail ni chaleur.</td></tr>
+   <tr><th>Bilan</th><td>Cycle complet</td><td>w' + q'<sub>H</sub> + q'<sub>L</sub> = 0</td><td class="num">${V(bil, 1, 'kJ/kg')}</td><td>Premier principe sur un cycle : |q'<sub>H</sub>| = w' + q'<sub>L</sub>. On rend à la source chaude plus d’énergie que le travail fourni.</td></tr>
+  </tbody></table></div>
+  <h3 class="ex-title">Efficacités du cycle idéal et débit</h3>
+  <ol class="steps" style="counter-reset:st 5">
+   <li><h4>Efficacité du réfrigérateur</h4><p>e<sub>idéal</sub> = q'<sub>L</sub>/w' = ${fmt(cy.qL, 1)}/${fmt(cy.w, 1)} = ${V(cy.e, 2)}. Chaleur prise à la source froide pour 1 kJ de travail.</p></li>
+   <li><h4>COP de la pompe à chaleur</h4><p>COP<sub>idéal</sub> = −q'<sub>H</sub>/w' = ${fmt(-cy.qH, 1)}/${fmt(cy.w, 1)} = ${V(cy.cop, 2)}. On vérifie COP = 1 + e, conséquence du bilan. Il reste inférieur au COP de Carnot, car le cycle comporte une désurchauffe et une détente irréversibles.</p></li>
+   <li><h4>Débit massique du fluide</h4><p>Il ne faut pas confondre m (masse d’eau du seau, 4 kg) et ṁ (débit de R134a, en kg/s). La chaleur reçue par l’eau du seau rouge pendant Δt vaut m·c·ΔT<sub>H</sub>. Elle vient du fluide : m·c·ΔT<sub>H</sub> = ṁ·Δt·|q'<sub>H</sub>|. Donc ṁ = m·c·ΔT<sub>H</sub> / (Δt·|q'<sub>H</sub>|)${isFinite(cy.mdot) ? ` = ${V(cy.mdot * 1000, 2, 'g/s')}` : ''}, avec q'<sub>H</sub> en J/kg.</p></li>
+  </ol>
+  <p class="note">Ce cycle est « idéal » : pas de perte de charge dans les tuyaux, compression isentropique, ni surchauffe à l’entrée du compresseur ni sous-refroidissement à la sortie du condenseur. Le cycle réel s’en écarte un peu, d’où un COP mesuré plus faible.</p>`;
+    }
+    function drawCycle(cv) {
+        cv = cv || $('#p-ph');
+        const useFinal = P2.done && P2.P1 != null;
+        const PL = useFinal ? P2.P1 : r1(gaugeL()), PH = useFinal ? P2.P2v : r1(gaugeH());
+        $('#p-cyctag').textContent = useFinal ? 'à t = 30 min (P₁, P₂ relevées)' : P2.started ? 'instant actuel' : 'compresseur à l\'arrêt';
+        const ok = PH - PL > 0.5, demo = !ok, cy = ok ? cycle(PL, PH) : cycle(1.5, 9.0);
+        if (demo)
+            $('#p-cyctag').textContent = 'exemple (P₁ = 1,5 bar, P₂ = 9 bar lues) : branchez le compresseur';
+        drawPH(cv, [{ cy, style: 'full', name: demo ? 'cycle exemple' : 'cycle idéal' }]);
+        const kv = $('#p-kv');
+        const d = derived(), first = d[0], last = d[d.length - 1];
+        let mdot = NaN;
+        if (!demo && first && last && last.t > 0)
+            mdot = MW * CW * (last.TH - first.TH) / (last.t * 60) / ((cy.h2 - cy.h3) * 1000) * 1000;
+        cy.mdot = mdot / 1000;
+        const ek = (demo ? 'd' : '') + [cy.PLg, cy.PHg].join('|') + '|' + (isFinite(mdot) ? mdot.toFixed(2) : '');
+        if ($('#p-explain').dataset.k !== ek) {
+            $('#p-explain').dataset.k = ek;
+            $('#p-explain').innerHTML = explainHTML(cy, demo ? 'de l’exemple' : useFinal ? 'mesurées à t = 30 min' : 'à cet instant');
+        }
+        const items = [['P₁ lue (BP)', fmt(cy.PLg, 1) + ' bar'], ['P₂ lue (HP)', fmt(cy.PHg, 1) + ' bar'], ['T évaporation', fmt(cy.Te, 1) + ' °C'], ['T condensation', fmt(cy.Tc, 1) + ' °C'],
+            ['h₁ (vapeur sat.)', fmt(cy.h1, 1) + ' kJ/kg'], ['h₂ (sortie compr.)', fmt(cy.h2, 1) + ' kJ/kg'], ['T₂ sortie compresseur', fmt(cy.T2, 1) + ' °C'], ['h₃ = h₄', fmt(cy.h3, 1) + ' kJ/kg'], ['Titre x₄', fmt(cy.x, 3)],
+            ["w' = h₂ − h₁", fmt(cy.w, 1) + ' kJ/kg'], ["q'H = h₃ − h₂", fmt(cy.qH, 1) + ' kJ/kg'], ["q'L = h₁ − h₄", fmt(cy.qL, 1) + ' kJ/kg'],
+            ['e idéal', fmt(cy.e, 2)], ['COP idéal', fmt(cy.cop, 2)], ['ṁ moyen (source chaude)', isFinite(mdot) ? fmt(mdot, 2) + ' g/s' : '—']];
+        kv.innerHTML = (demo ? '<div><b>Attention</b><span>Exemple, pas une mesure</span></div>' : '') + items.map(([k, v]) => `<div><b>${k}</b><span>${v}</span></div>`).join('');
+    }
+    function crNum(v) { const m = String(v || '').replace(/P\s*[12₁₂]/gi, '').match(/-?\d+(?:[.,]\d+)?/); return m ? parseFloat(m[0].replace(',', '.')) : NaN; }
+    function drawCRcycle() {
+        const cv = $('#crp-ph');
+        if (!cv)
+            return;
+        const p1 = crNum($('#crp-p1').value), p2 = crNum($('#crp-p2').value), cycles = [];
+        if (isFinite(p1) && isFinite(p2) && p2 - p1 > 0.5)
+            cycles.push({ cy: cycle(p1, p2), style: 'full', name: 'ton cycle (P₁, P₂ saisies)' });
+        const pc = $('#cr-pac').classList.contains('showcorr') ? pacCycle() : null;
+        if (pc)
+            cycles.push({ cy: pc, style: cycles.length ? 'outline' : 'full', color: cssv('--ok'), name: 'corrigé' });
+        drawPH(cv, cycles, { empty: 'Saisissez P₁ et P₂ (bar, lues) dans la section a pour tracer votre cycle' });
+    }
+    /* ---- scène 3D pompe à chaleur ---- */
+    let stPac = null, PV = {};
+    function buildPac() {
+        stPac = makeStage($('#stage-pac'), [0, 4.6, 11.2], [0, 3.4, 0]);
+        const S = stPac.scene;
+        const base = new THREE.Mesh(new THREE.BoxGeometry(9, .2, 3.4), M3(0xe9e6df, { roughness: .9 }));
+        base.position.set(0, -.1, .6);
+        S.add(base);
+        const board = new THREE.Mesh(new THREE.BoxGeometry(9, 8, .15), M3(0xf3f2ee, { roughness: .9 }));
+        board.position.set(0, 4, -.6);
+        S.add(board);
+        const shelf = new THREE.Mesh(new THREE.BoxGeometry(2.2, .12, 1.9), M3(0xdedbd3));
+        shelf.position.set(-2.3, 2.47, .45);
+        S.add(shelf);
+        const comp = new THREE.Mesh(new THREE.SphereGeometry(.65, 32, 24), M3(0x1c1f22, { metalness: .4, roughness: .35 }));
+        comp.scale.set(1.15, .9, .95);
+        comp.position.set(0, .75, .7);
+        S.add(comp);
+        const plate = new THREE.Mesh(new THREE.BoxGeometry(1.8, .12, 1.3), M3(0x2a2d30));
+        plate.position.set(0, .1, .7);
+        S.add(plate);
+        PV.cl = new THREE.Mesh(new THREE.SphereGeometry(.07, 12, 12), new THREE.MeshBasicMaterial({ color: 0x333333 }));
+        PV.cl.position.set(.6, .45, 1.25);
+        S.add(PV.cl);
+        function bucket(x, y, z, col) {
+            const g = new THREE.Group();
+            const wall = new THREE.Mesh(new THREE.CylinderGeometry(.88, .74, 1.55, 40, 1, true), M3(col, { side: THREE.DoubleSide, roughness: .45, transparent: true, opacity: .55, depthWrite: false }));
+            wall.position.y = .775;
+            g.add(wall);
+            const bot = new THREE.Mesh(new THREE.CircleGeometry(.74, 40), M3(col));
+            bot.rotation.x = -Math.PI / 2;
+            bot.position.y = .01;
+            g.add(bot);
+            const rim = new THREE.Mesh(new THREE.TorusGeometry(.88, .03, 8, 48), M3(col));
+            rim.rotation.x = Math.PI / 2;
+            rim.position.y = 1.55;
+            g.add(rim);
+            const wm = new THREE.MeshStandardMaterial({ color: 0x8fbcd6, transparent: true, opacity: .55, roughness: .15, depthWrite: false });
+            const w = new THREE.Mesh(new THREE.CylinderGeometry(.83, .75, 1.3, 40), wm);
+            w.position.y = .66;
+            g.add(w);
+            g.position.set(x, y, z);
+            S.add(g);
+            return wm;
+        }
+        PV.wL = bucket(-2.3, 2.53, .8, 0x3768c7);
+        PV.wH = bucket(2.4, 0, 1.0, 0xd94f7d);
+        const pts = [];
+        const reg = [];
+        const mark = c => reg.push({ i: pts.length, c });
+        const V = (x, y, z) => pts.push(new THREE.Vector3(x, y, z));
+        mark(0xe0533d);
+        V(.35, 1.4, .7);
+        V(.35, 1.9, .7);
+        V(.35, 1.9, -.3);
+        V(.35, 6.3, -.3);
+        V(3.7, 6.3, -.3);
+        V(3.7, 2.3, -.3);
+        V(3.7, 2.3, 1.0);
+        V(3.0, 1.85, 1.0);
+        mark(0xef8a3a);
+        helix(2.4, 1.0, .55, 1.4, .35, 6, 140).forEach(p => pts.push(p));
+        V(2.4, .3, 1.0);
+        V(2.4, 2.3, 1.0);
+        mark(0xf2b33d);
+        V(2.4, 2.3, -.3);
+        V(2.4, 5.3, -.3);
+        V(-1.0, 5.3, -.3);
+        mark(0x86b8ee);
+        V(-1.7, 5.3, -.3);
+        V(-1.7, 4.5, -.3);
+        V(-1.7, 4.5, .8);
+        V(-1.75, 4.05, .8);
+        helix(-2.3, .8, .5, 3.85, 2.85, 6, 140).forEach(p => pts.push(p));
+        V(-2.3, 2.8, .8);
+        V(-2.3, 4.5, .8);
+        mark(0x3f78c9);
+        V(-2.3, 4.5, -.3);
+        V(-3.7, 4.5, -.3);
+        V(-3.7, 1.9, -.3);
+        V(-.35, 1.9, -.3);
+        V(-.35, 1.9, .7);
+        V(-.35, 1.4, .7);
+        const path = polyPath(pts);
+        const lens = path.getCurveLengths(), tot = path.getLength();
+        const cum = [0];
+        for (let i = 1; i < pts.length; i++)
+            cum.push(cum[i - 1] + pts[i].distanceTo(pts[i - 1]));
+        PV.bounds = reg.map(r => ({ u: cum[r.i] / cum[cum.length - 1], c: new THREE.Color(r.c) }));
+        const copper = M3(0xb87333, { metalness: .65, roughness: .35 });
+        S.add(new THREE.Mesh(new THREE.TubeGeometry(path, 1400, .05, 8, false), copper));
+        PV.path = path;
+        const evapPts = helix(-2.3, .8, .5, 3.85, 2.85, 6, 140);
+        PV.frostMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0, roughness: 1, depthWrite: false });
+        S.add(new THREE.Mesh(new THREE.TubeGeometry(polyPath(evapPts), 500, .095, 8, false), PV.frostMat));
+        // stubs manomètres
+        [[-3.0, 4.5, 6.35], [3.0, 6.3, 6.35]].forEach(([x, y0, y1]) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, y1 - y0, 8), copper); s.position.set(x, (y0 + y1) / 2, -.3); S.add(s); });
+        function gauge(x, y, kind, col) {
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(.6, .6, .22, 40), M3(col, { metalness: .3 }));
+            body.rotation.x = Math.PI / 2;
+            body.position.set(x, y, -.3);
+            S.add(body);
+            const f = new THREE.Mesh(new THREE.CircleGeometry(.56, 48), new THREE.MeshBasicMaterial({ map: dialFace(kind).t }));
+            f.position.set(x, y, -.185);
+            S.add(f);
+            const n = needle(.45, 0x111111);
+            n.position.set(x, y, -.17);
+            S.add(n);
+            return n;
+        }
+        PV.nL = gauge(-3.0, 6.95, 'bp', 0x2d64a8);
+        PV.nH = gauge(3.0, 6.95, 'hp', 0xb8382a);
+        const filt = new THREE.Mesh(new THREE.CylinderGeometry(.15, .15, .6, 20), M3(0xf5f5f5, { roughness: .4 }));
+        filt.rotation.z = Math.PI / 2;
+        filt.position.set(1.5, 5.3, -.3);
+        S.add(filt);
+        const det = new THREE.Mesh(new THREE.BoxGeometry(.38, .38, .32), M3(0xc9a24a, { metalness: .6, roughness: .35 }));
+        det.position.set(-1.0, 5.3, -.3);
+        S.add(det);
+        const knob = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .3, 16), M3(0xc9a24a, { metalness: .6 }));
+        knob.position.set(-1.0, 5.62, -.3);
+        S.add(knob);
+        const mano = new THREE.Mesh(new THREE.BoxGeometry(.6, .5, .25), M3(0x9aa1a6, { metalness: .3 }));
+        mano.position.set(1.0, 3.6, -.4);
+        S.add(mano);
+        const N = 170;
+        PV.flow = new THREE.InstancedMesh(new THREE.SphereGeometry(.038, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), N);
+        PV.u = [];
+        for (let i = 0; i < N; i++)
+            PV.u.push(i / N);
+        S.add(PV.flow);
+        // sondes
+        [[-2.95, 3.3, 1.25], [1.75, .85, 1.45]].forEach(([x, y, z]) => { const s = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, 1.6, 8), M3(0x444a4f)); s.position.set(x, y, z); s.rotation.z = .12; S.add(s); });
+        const L = (t, p) => stPac.label(t, p);
+        L('1 Compresseur', [0, 1.55, .7]);
+        L('2 Seau rouge', [2.4, 1.95, 1.6]);
+        L('3 Condenseur', [3.7, 3.0, -.2]);
+        L('4 Filtre', [1.5, 5.65, -.3]);
+        L('5 Détendeur', [-1.0, 5.95, -.3]);
+        L('6 Évaporateur', [-1.55, 4.15, 1.2]);
+        L('7 Seau bleu', [-2.3, 4.35, 1.5]);
+        L('8 Manostat', [1.0, 4.05, -.4]);
+        L('9 BP', [-3.0, 7.75, -.3]);
+        L('10 HP', [3.0, 7.75, -.3]);
+    }
+    function regionColor(u) { let c = PV.bounds[0].c; for (const b of PV.bounds)
+        if (u >= b.u)
+            c = b.c; return c; }
+    function frameP(dt) {
+        if (!stPac)
+            return;
+        PV.wL.color.copy(waterColor(P2.TL));
+        PV.wH.color.copy(waterColor(P2.TH));
+        PV.frostMat.opacity = P2.running || P2.done ? Math.max(0, Math.min(.75, (4 - P2.TL) / 8)) : Math.max(0, Math.min(.75, (4 - P2.TL) / 8));
+        const ang = v => (-135 + 270 * (v + 1) / (v > 10 ? 31 : 11)) * Math.PI / 180;
+        PV.nL.rotation.z = -((-135 + 270 * (gaugeL() + 1) / 11) * Math.PI / 180);
+        PV.nH.rotation.z = -((-135 + 270 * (gaugeH() + 1) / 31) * Math.PI / 180);
+        PV.cl.material.color.setHex(P2.running ? 0x33dd66 : 0x333333);
+        const sp = P2.running ? .035 : 0;
+        for (let i = 0; i < PV.u.length; i++) {
+            PV.u[i] = (PV.u[i] + dt * sp) % 1;
+            PV.path.getPointAt(PV.u[i], tmpV);
+            tmpS.setScalar(P2.running ? 1 : .001);
+            tmpM.compose(tmpV, tmpQ, tmpS);
+            PV.flow.setMatrixAt(i, tmpM);
+            PV.flow.setColorAt(i, regionColor(PV.u[i]));
+        }
+        PV.flow.instanceMatrix.needsUpdate = true;
+        if (PV.flow.instanceColor)
+            PV.flow.instanceColor.needsUpdate = true;
+    }
+    function hudP() {
+        const m = Math.floor(P2.t / 60), s = Math.floor(P2.t % 60);
+        $('#p-t').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        $('#p-tl').textContent = fmt(P2.sL, 1);
+        $('#p-th').textContent = fmt(P2.sH, 1);
+        $('#p-pl').textContent = fmt(gaugeL(), 1);
+        $('#p-ph').textContent = fmt(gaugeH(), 1);
+        const st = $('#p-state');
+        st.textContent = P2.done ? 'Terminé · t = 30 min' : P2.running ? (P2.ice > 0.001 ? 'En marche · glace sur l\'évaporateur' : 'Compresseur en marche') : P2.started ? 'En pause' : 'Compresseur débranché';
+        st.className = 'chip state ' + (P2.running ? 'run' : P2.done ? 'ok' : 'off');
+    }
+    /* ======================= Signature ======================= */
+    function updSig() {
+        const box = $('#sig');
+        if (!box)
+            return;
+        const dT = Math.max(0, D.Ttube - D.Tz);
+        box.style.setProperty('--dil', (Math.min(1, dT / 59) * 0.06).toFixed(4) + 'em');
+        let pos, cap;
+        if (active === 'pac') {
+            pos = Math.max(0, Math.min(1, (P2.sH - P2.sL) / 18));
+            cap = `De la source froide à la source chaude · T_L = ${fmt(P2.sL, 1)} °C → T_H = ${fmt(P2.sH, 1)} °C`;
+        }
+        else {
+            pos = Math.max(0, Math.min(1, dT / 59));
+            cap = `Ma signature se dilate avec le tube · ΔT = ${fmt(dT, 1)} °C · ΔL = ${fmt(Math.max(0, reading()), 2)} mm`;
+        }
+        box.style.setProperty('--sigpos', (pos * 100).toFixed(1) + '%');
+        $('#sig-cap').textContent = cap;
+        $('#sig-dl').textContent = active === 'pac' ? 'T_L → T_H' : 'L₀ + ΔL';
+    }
+    /* ======================= Compte rendu ======================= */
+    const CRK = 'thermo2-cr:';
+    function crInit() {
+        document.querySelectorAll('.cr input[type=text],.cr input[type=date],.cr textarea').forEach(e => { const v = store.get(CRK + e.id); if (v != null)
+            e.value = v; e.addEventListener('input', () => store.set(CRK + e.id, e.value)); });
+        [['crd', '#cr-dil'], ['crp', '#cr-pac']].forEach(([k, sel]) => {
+            const cb = $('#' + k + '-corr');
+            cb.onchange = () => { $(sel).classList.toggle('showcorr', cb.checked); drawCR(); };
+            $('#' + k + '-copy').onclick = () => copyText(crText($(sel)), 'Compte rendu copié (texte + tableaux)');
+        });
+        ['#crp-p1', '#crp-p2'].forEach(id => $(id).addEventListener('input', drawCRcycle));
+        document.querySelectorAll('.sub').forEach(b => b.addEventListener('click', () => setSub(b.dataset.sec, b.dataset.sub)));
+        document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => {
+            const [m, L] = b.dataset.goto.split('|');
+            setSub('dil', 'man');
+            if (D.mat !== m || D.L0 !== +L) {
+                D.mat = m;
+                D.L0 = +L;
+                changeSetup();
+            }
+            $('#stage-dil').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }));
+        document.querySelectorAll('[data-gotop]').forEach(b => b.addEventListener('click', () => { setSub('pac', 'man'); $('#stage-pac').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+    }
+    const subv = { dil: 'man', pac: 'man' };
+    function setSub(sec, v) {
+        subv[sec] = v;
+        setTimeout(markTabs);
+        document.querySelectorAll(`.sub[data-sec="${sec}"]`).forEach(b => b.setAttribute('aria-selected', String(b.dataset.sub === v)));
+        $('#' + sec + '-man').hidden = v !== 'man';
+        $('#' + sec + '-cr').hidden = v !== 'cr';
+        requestAnimationFrame(() => { var _a; if (v === 'man') {
+            (_a = (sec === 'dil' ? stDil : stPac)) === null || _a === void 0 ? void 0 : _a.resize();
+            sec === 'dil' ? drawD() : drawP();
+        }
+        else {
+            updCRD();
+            updCRP();
+            drawCR();
+        } });
+    }
+    function crText(root) {
+        const out = [];
+        root.querySelectorAll('.crtitle,.crh,h4,.qlabel,label,input[type=text],input[type=date],textarea,table').forEach(e => {
+            if (e.tagName === 'LABEL') {
+                const t = e.childNodes[0];
+                if (t && t.nodeType === 3)
+                    out.push(t.textContent.trim() + ' :');
+                return;
+            }
+            if (e.tagName === 'INPUT' || e.tagName === 'TEXTAREA') {
+                out.push(e.value ? '  ' + e.value : '  ………');
+                return;
+            }
+            if (e.tagName === 'TABLE') {
+                const show = root.classList.contains('showcorr');
+                [...e.rows].forEach(r => { const cells = [...r.cells].filter(c => show || !c.classList.contains('calc')); out.push(cells.map(c => c.innerText.trim()).join('\t')); });
+                out.push('');
+                return;
+            }
+            const t = e.innerText.trim();
+            if (t)
+                out.push((e.classList.contains('crh') || e.classList.contains('crtitle')) ? '\n' + t : t);
+        });
+        return out.join('\n');
+    }
+    function dTableHTML(s, L0) {
+        const L = L0 * 1000;
+        const cell = f => SETS.map(T => { const p = s && s.pts[T]; if (!p)
+            return '<td class="na">·</td>'; return `<td>${f(p)}</td>`; }).join('');
+        const ccell = f => SETS.map(T => { const p = s && s.pts[T]; if (!p)
+            return '<td class="na calc">·</td>'; return `<td class="calc">${f(p)}</td>`; }).join('');
+        return `<thead><tr><th>Grandeur</th>${SETS.map(T => `<th>${T} °C</th>`).join('')}</tr></thead><tbody>
+  <tr><th>Température (initiale) °C</th>${cell(p => fmt(p.Tinit, 1))}</tr>
+  <tr><th>Température (réglée) °C</th>${SETS.map(T => `<td>${T}</td>`).join('')}</tr>
+  <tr><th>Température donnée par le thermomètre °C</th>${cell(p => fmt(p.Tth, 1))}</tr>
+  <tr class="calcrow"><th class="calc">Variation de la température ΔT °C</th>${ccell(p => fmt(p.Tth - p.Tinit, 1))}</tr>
+  <tr><th>Variation de la longueur de la barre : dL (mm)</th>${cell(p => fmt(p.dL, 2))}</tr>
+  <tr><th class="calc">dL/L₀ (×10⁻⁴)</th>${ccell(p => fmt(p.dL / L * 1e4, 3))}</tr></tbody>`;
+    }
+    function alphaOf(mat, L0) { const s = D.series[mat + '|' + L0]; if (!s)
+        return null; const pts = Object.values(s.pts).map(p => [p.Tth - p.Tinit, p.dL / (L0 * 1000)]); if (pts.length < 2)
+        return null; const f = linfit(pts); return { a: f.a * 1e6, r2: f.r2, n: pts.length }; }
+    function updCRD() {
+        if (!$('#crd-t1'))
+            return;
+        [['acier', .4], ['acier', .6], ['cuivre', .4], ['cuivre', .6]].forEach(([m, L], i) => $('#crd-t' + (i + 1)).innerHTML = dTableHTML(D.series[m + '|' + L], L));
+        const A = [['acier', .4], ['acier', .6], ['cuivre', .4], ['cuivre', .6]].map(([m, L]) => ({ m, L, r: alphaOf(m, L) })).filter(x => x.r);
+        const nm = x => `${MAT[x.m].name.toLowerCase()} ${Math.round(x.L * 100)} cm`;
+        if (!A.length) {
+            $('#crd-k1').textContent = 'Oui : on attend des droites passant par l\'origine (dL/L₀ = α·ΔT). Relevez des séries pour obtenir le corrigé chiffré.';
+            $('#crd-k2').textContent = 'La pente de chaque droite est α. Valeurs de référence : acier 12×10⁻⁶ K⁻¹, cuivre 17×10⁻⁶ K⁻¹.';
+            $('#crd-k3').textContent = 'Non : α est une caractéristique du matériau. Relevez une même barre à 40 et 60 cm pour le vérifier.';
+            return;
+        }
+        $('#crd-k1').innerHTML = 'Oui : les points sont alignés sur des droites passant par l\'origine, donc dL/L₀ est proportionnel à ΔT (' + A.map(x => `${nm(x)} : R² = <span class="live">${fmt(x.r.r2, 4)}</span>`).join(' ; ') + ').';
+        $('#crd-k2').innerHTML = 'α est la pente de la droite dL/L₀ = f(ΔT) : ' + A.map(x => `${nm(x)} : α ≈ <span class="live">${fmt(x.r.a, 1)}×10⁻⁶ K⁻¹</span>`).join(' ; ') + '. Valeurs de référence : acier 12×10⁻⁶ K⁻¹, cuivre 17×10⁻⁶ K⁻¹.';
+        const by = {};
+        A.forEach(x => (by[x.m] = by[x.m] || []).push(x));
+        const cmp = Object.keys(by).filter(m => by[m].length === 2).map(m => { const [a, b] = by[m]; return `${MAT[m].name.toLowerCase()} : ${fmt(a.r.a, 1)} (40 cm) et ${fmt(b.r.a, 1)} (60 cm)×10⁻⁶ K⁻¹, écart ${fmt(Math.abs(a.r.a - b.r.a) / ((a.r.a + b.r.a) / 2) * 100, 1)} %`; });
+        $('#crd-k3').innerHTML = 'Non : ' + (cmp.length ? 'les deux longueurs donnent la même pente aux incertitudes près (' + cmp.map(c => `<span class="live">${c}</span>`).join(' ; ') + '). ' : '') + 'α est une caractéristique du matériau, indépendante de L₀ ; seul l\'allongement dL est proportionnel à L₀.';
+    }
+    function dSeries(L0) { return Object.values(D.series).filter(s => s.L0 === L0).map(s => ({ name: MAT[s.mat].name, color: cssv(MAT[s.mat].plot), pts: Object.values(s.pts).map(p => [p.Tth - p.Tinit, p.dL / (s.L0 * 1000) * 1e4]).sort((a, b) => a[0] - b[0]), fit: true, square: s.mat === 'cuivre' })); }
+    function pOpts(m) {
+        const d = derived(), CLIP = 20;
+        if (m === 'T')
+            return { series: [{ name: 'T_H(t)', color: cssv('--hot'), pts: d.map(r => [r.t, r.TH]) }, { name: 'T_L(t)', color: cssv('--cold'), pts: d.map(r => [r.t, r.TL]), square: true }], yLabel: 'T (°C)', xLabel: 't (min)', xMin: 0, xMax: 30, empty: 'Faites la manipulation pour obtenir les points' };
+        const k = m === 'e' ? 'e' : 'cop', kc = m === 'e' ? 'eC' : 'copC';
+        return { series: [{ name: m === 'e' ? 'e(t)' : 'COP(t)', color: cssv('--copper'), pts: d.filter(r => isFinite(r[k])).map(r => [r.t, r[k]]) }, { name: m === 'e' ? 'e Carnot' : 'COP Carnot', color: cssv('--ink'), dash: true, square: true, pts: d.filter(r => isFinite(r[kc])).map(r => [r.t, Math.min(r[kc], CLIP)]) }], yLabel: m === 'e' ? 'e' : 'COP', yMax: CLIP, xLabel: 't (min)', xMin: 0, xMax: 30, empty: 'Faites la manipulation pour obtenir les points' };
+    }
+    function drawCR() {
+        if (subv.dil === 'cr' && active === 'dil') {
+            [[.4, '#crd-c40'], [.6, '#crd-c60']].forEach(([L, id]) => chart($(id), { series: dSeries(L), xLabel: 'ΔT (°C)', yLabel: 'dL/L₀ (×10⁻⁴)', xMin: 0, yMin: 0, empty: `Relevez l'acier et le cuivre à L₀ = ${Math.round(L * 100)} cm` }));
+        }
+        if (subv.pac === 'cr' && active === 'pac') {
+            chart($('#crp-cT'), pOpts('T'));
+            chart($('#crp-ce'), pOpts('e'));
+            chart($('#crp-cc'), pOpts('cop'));
+            drawCRcycle();
+        }
+    }
+    function pacCycle() {
+        const fin = P2.done && P2.P1 != null;
+        const PL = fin ? P2.P1 : r1(gaugeL()), PH = fin ? P2.P2v : r1(gaugeH());
+        if (PH - PL <= .5)
+            return null;
+        const cy = cycle(PL, PH);
+        const d = derived(), f = d[0], l = d[d.length - 1];
+        cy.mdot = (f && l && l.t > 0) ? MW * CW * (l.TH - f.TH) / (l.t * 60) / ((cy.h2 - cy.h3) * 1000) : NaN;
+        cy.fin = fin;
+        return cy;
+    }
+    function updCRP() {
+        if (!$('#crp-table'))
+            return;
+        $('#crp-table').innerHTML = $('#p-table').innerHTML.replace(/ hidecalc/g, '');
+        const d = derived(), l = d[d.length - 1], cy = pacCycle();
+        if (P2.done) {
+            $('#crp-kp1').innerHTML = `P₁ = <span class="live">${fmt(P2.P1, 1)} bar</span> (relative, BP)`;
+            $('#crp-kp2').innerHTML = `P₂ = <span class="live">${fmt(P2.P2v, 1)} bar</span> (relative, HP)`;
+        }
+        else {
+            $('#crp-kp1').textContent = 'Terminez la manipulation (t = 30 min) pour lire P₁.';
+            $('#crp-kp2').textContent = '—';
+        }
+        const last = d.filter(r => isFinite(r.cop));
+        const L = last[last.length - 1];
+        $('#crp-k1').innerHTML = 'T<sub>H</sub> augmente et T<sub>L</sub> diminue au cours du temps (T<sub>L</sub> se rapproche de 0 °C et l\'évaporateur givre). L\'écart T<sub>H</sub> − T<sub>L</sub> croît, donc COP<sub>Carnot</sub> = T<sub>H</sub>/ΔT et e<sub>Carnot</sub> = T<sub>L</sub>/ΔT diminuent. ' +
+            (L ? `À t = ${L.t} min : COP ≈ <span class="live">${fmt(L.cop, 2)}</span> contre COP<sub>Carnot</sub> ≈ <span class="live">${fmt(L.copC, 1)}</span>, e ≈ <span class="live">${fmt(L.e, 2)}</span> contre e<sub>Carnot</sub> ≈ <span class="live">${fmt(L.eC, 1)}</span>. ` : '') +
+            'Les valeurs réelles restent très inférieures à celles de Carnot à cause des irréversibilités : échanges thermiques sous un écart de température fini, frottements et pertes du compresseur, pertes vers l\'air ambiant.';
+        const v = (x, d, u) => `<span class="live">≈ ${fmt(x, d)}${u ? ' ' + u : ''}</span>`;
+        if (cy) {
+            const tag = cy.fin ? '' : ' (valeurs à l\'instant actuel, terminez la manipulation)';
+            $('#crp-kx').innerHTML = `x₄ = (h₄ − h<sub>f</sub>)/(h<sub>g</sub> − h<sub>f</sub>) à P₁ ${v(cy.x, 2)}${tag}`;
+            $('#crp-kw').innerHTML = v(cy.w, 1, 'kJ/kg');
+            $('#crp-kqh').innerHTML = v(cy.qH, 1, 'kJ/kg');
+            $('#crp-kql').innerHTML = v(cy.qL, 1, 'kJ/kg');
+            $('#crp-kid').innerHTML = `: e<sub>idéal</sub> ${v(cy.e, 2)}, cop<sub>idéal</sub> ${v(cy.cop, 2)}`;
+            $('#crp-kdeb').innerHTML = isFinite(cy.mdot) ? v(cy.mdot * 1000, 2, 'g/s') : '';
+        }
+        else {
+            ['#crp-kx', '#crp-kw', '#crp-kqh', '#crp-kql', '#crp-kid', '#crp-kdeb'].forEach(id => $(id).textContent = '');
+            $('#crp-kx').textContent = 'x₄ = (h₄ − h_f)/(h_g − h_f) à P₁ : faites la manipulation pour obtenir P₁ et P₂.';
+        }
+        {
+            const ek = cy ? [cy.PLg, cy.PHg, cy.fin].join('|') : 'none';
+            if ($('#crp-explain').dataset.k !== ek) {
+                $('#crp-explain').dataset.k = ek;
+                $('#crp-explain').innerHTML = explainHTML(cy, cy && cy.fin ? 'mesurées à t = 30 min' : 'à cet instant');
+            }
+        }
+        $('#crp-kg').innerHTML = 'La pompe à chaleur transfère de la chaleur de la source froide vers la source chaude grâce au travail du compresseur, en respectant W + Q<sub>H</sub> + Q<sub>L</sub> = 0. ' +
+            (L && cy ? `Le COP mesuré (${fmt(L.cop, 2)}) est inférieur au COP du cycle idéal (${fmt(cy.cop, 2)}), lui-même inférieur au COP de Carnot (${fmt(L.copC, 1)}). ` : 'On obtient COP mesuré &lt; COP du cycle idéal &lt; COP de Carnot. ') +
+            'Le cycle idéal néglige les pertes de charge, la surchauffe et le sous-refroidissement ; les mesures incluent en plus les pertes thermiques des seaux. Les performances baissent quand l\'écart de température entre les sources augmente.';
+        if (subv.pac === 'cr')
+            drawCR();
+    }
+    /* ======================= Onglets, boucle, thème ======================= */
+    let active = 'dil';
+    function setTab(id) {
+        active = id;
+        document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+        $('#sec-dil').hidden = id !== 'dil';
+        $('#sec-pac').hidden = id !== 'pac';
+        store.set('thermo2-tab', id);
+        setTimeout(markTabs);
+        requestAnimationFrame(() => { var _a; (_a = (id === 'dil' ? stDil : stPac)) === null || _a === void 0 ? void 0 : _a.resize(); id === 'dil' ? drawD() : drawP(); drawCR(); updSig(); });
+    }
+    document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { setTab(b.dataset.tab); setSub(b.dataset.tab, b.dataset.sub || 'man'); }));
+    function markTabs() { document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === active && (b.dataset.sub || 'man') === subv[active]))); }
+    function themeChanged() { [stDil, stPac].forEach(s => s && (s.scene.background = new THREE.Color(cssv('--scene')))); drawD(); drawP(); drawCR(); }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeChanged);
+    new MutationObserver(themeChanged).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    let rs;
+    window.addEventListener('resize', () => { clearTimeout(rs); rs = setTimeout(() => { drawD(); drawP(); drawCR(); }, 120); });
+    let last = performance.now(), hudT = 0, cycT = 0;
+    function loop(now) {
+        const real = Math.min(.1, (now - last) / 1000);
+        last = now;
+        updD(real * D.speed);
+        updP(real * P2.speed);
+        if (active === 'dil') {
+            frameD(real, now);
+            stDil && stDil.render();
+        }
+        else {
+            frameP(real);
+            stPac && stPac.render();
+        }
+        if (now - hudT > 120) {
+            hudT = now;
+            hudD();
+            hudP();
+        }
+        if (active === 'pac' && P2.running && now - cycT > 1000) {
+            cycT = now;
+            drawCycle();
+        }
+        requestAnimationFrame(loop);
+    }
+    function start() {
+        if (GL) {
+            try {
+                initTmp();
+                buildDil();
+                buildPac();
+            }
+            catch (e) {
+                GL = false;
+                console.error(e);
+            }
+        }
+        if (!GL)
+            ['#stage-dil', '#stage-pac'].forEach(s => { const d = document.createElement('div'); d.className = 'nogl'; d.textContent = 'La vue 3D nécessite WebGL, indisponible dans ce navigateur. Les mesures, tableaux et graphes fonctionnent normalement.'; $(s).appendChild(d); });
+        crInit();
+        buildInstr();
+        D.Tth = D.Tamb + D.off;
+        fixTube();
+        syncD();
+        syncP();
+        const t = store.get('thermo2-tab');
+        setTab(t === 'pac' ? 'pac' : 'dil');
+        requestAnimationFrame(loop);
+    }
+    Promise.race([document.fonts ? document.fonts.ready : Promise.resolve(), new Promise(r => setTimeout(r, 1500))]).then(start);
+})();
+</script>
+
+</body>
+</html>
